@@ -1,0 +1,99 @@
+/* horizontal scroll css start */
+.horizontalScrolllll {
+    margin: 0;
+    overflow-x: hidden;
+  }
+  
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+  
+  .wrapper {
+    margin: 0 auto;
+  }
+  
+  .trigger {
+    position: absolute;
+  }
+  
+  .trigger--one {
+    left: 0;
+  }
+  
+  .scene {
+    position: absolute;
+    height: 100vh;
+    top: 0;
+    left: 0;
+    right: 0;
+  }
+  
+  .scene--active {
+    position: fixed;
+  }
+  
+  .scene--ended {
+    position: absolute;
+    bottom: 0;
+    top: auto;
+  }
+  
+  .horizontal-scroll-section {
+    position: relative;
+    min-height: 100vh;
+    opacity: 0;
+    transition: 0.2s opacity;
+  }
+  
+  .horizontal-scroll-section--init {
+    opacity: 1;
+  }
+  
+  .horizontal-scroll-section__content {
+    display: flex;
+    align-items: center;
+  }
+  
+  .horizontal-scroll-section__content-wrapper {
+    display: flex;
+    height: 100%;
+    align-items: center;
+    position: relative;
+  }
+  
+  .horizontal-scroll-section__content-section {
+    position: relative;
+    min-width: 60vw;
+    text-align: center;
+    padding: 0 40px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+  }
+  
+  .horizontal-scroll-section__image {
+    display: flex;
+    align-items: center;
+  }
+  
+  .horizontal-scroll-section__image h2 {
+    margin-left: 20px;
+    width: 250px;
+    text-align: left;
+    flex-shrink: 0;
+  }
+  
+  .horizontal-scroll-section__image--two img {
+    max-width: 400px;
+  }
+  
+  .horizontal-scroll-section__image--four img {
+    max-width: 400px;
+  }
+  
+  .horizontal-scroll-section--animation-one
+    .horizontal-scroll-section__image--two {
+    opacity: 1;
+    transform: translateX(0);
+  }

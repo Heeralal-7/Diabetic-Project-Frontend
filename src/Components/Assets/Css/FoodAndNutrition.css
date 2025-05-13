@@ -1,0 +1,300 @@
+/* Slider css */
+.FoodAndNutritionSlider .Slide {
+  background-color: var(--lightBlue-color);
+  background-size: cover !important;
+  background-position: center;
+}
+.FoodAndNutritionSlider .slick-arrow:before {
+  color: var(--White-color) !important;
+  border-color: var(--active-color) !important;
+  opacity: 0.6 !important;
+  font-size: 20px !important;
+}
+.FoodAndNutritionSlider .slick-next:before {
+  content: "\f101" !important;
+}
+.FoodAndNutritionSlider .slick-prev:before {
+  content: "\f100" !important;
+}
+
+/* Slider css end */
+
+/* Carousel start */
+.FoodAndNutrition.CarouselHeight {
+  height: 70vh;
+  max-height: 500px;
+  background: #000;
+}
+
+.FoodAndNutriCarouselCaption {
+  text-align: start !important;
+  padding-bottom: 6rem;
+}
+
+/* Background images are set within the HTML using inline CSS, not here */
+
+.FoodAndNutriCarouselBg {
+  width: 100%;
+  height: 100%;
+  background-position: center;
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  background-size: cover;
+  -o-background-size: cover;
+  opacity: 0.8;
+}
+
+/* text animations */
+/* headings */
+.carousel-item:nth-child(5n + 1) .carousel-caption .hdding {
+  animation-name: fadeInLeft !important;
+}
+.carousel-item:nth-child(5n + 2) .carousel-caption .hdding {
+  animation-name: fadeInUp !important;
+}
+
+.carousel-item:nth-child(5n + 3) .carousel-caption .hdding {
+  animation-name: fadeInDown !important;
+}
+.carousel-item:nth-child(5n + 4) .carousel-caption .hdding {
+  animation-name: fadeInRight !important;
+}
+.carousel-item:nth-child(5n + 5) .carousel-caption .hdding {
+  animation-name: fadeInTopLeftDown !important;
+}
+/* dessss */
+.carousel-item:nth-child(5n + 1) .carousel-caption .desss {
+  animation-name: fadeInUp !important;
+}
+.carousel-item:nth-child(5n + 2) .carousel-caption .desss {
+  animation-name: fadeInLeft !important;
+}
+.carousel-item:nth-child(5n + 3) .carousel-caption .desss {
+  animation-name: fadeInRight !important;
+}
+.carousel-item:nth-child(5n + 4) .carousel-caption .desss {
+  animation-name: fadeInTopLeftDown !important;
+}
+.carousel-item:nth-child(5n + 5) .carousel-caption .desss {
+  animation-name: fadeInDown !important;
+}
+.animated-2 {
+  animation-duration: 2s;
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translate3d(300px, 0, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translate3d(-300px, 0, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 300px, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -300px, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fadeInTopLeftDown {
+  from {
+    opacity: 0;
+    transform: translate3d(-300px, -300px, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* text animations end */
+/**
+* Button
+*/
+.foodNNutrCarouselBtn.carousel-control-prev,
+.foodNNutrCarouselBtn.carousel-control-next {
+  opacity: 0.7 !important;
+}
+.carousel-control-prev:hover {
+  background: linear-gradient(
+    to left,
+    rgba(0, 0, 0, 0.0001) 0,
+    rgba(0, 0, 0, 0.5) 100%
+  );
+}
+
+.carousel-control-next:hover {
+  background: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.0001) 0,
+    rgba(0, 0, 0, 0.5) 100%
+  );
+}
+.customIndicators1 {
+  gap: 16px;
+}
+
+.customIndicators1 button {
+  border-radius: 50%;
+  width: 15px !important;
+  height: 15px !important;
+  padding: 4px;
+  position: relative;
+  margin: 0 15px;
+  background-color: transparent;
+  opacity: 1;
+}
+
+.customIndicators1 button:after {
+  border-radius: 50%;
+  padding: 10px;
+  border: 4px solid #fff;
+  position: absolute;
+  content: "";
+  top: -7px;
+  left: -7px;
+  bottom: -7px;
+  right: -7px;
+}
+
+.customIndicators1 button.active {
+  background-color: white;
+}
+/* Carousel end */
+
+.oferrsWrapper {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(144px, 1fr));
+  gap: 6px;
+}
+/* offersSlider css start */
+.FoodAndNutritionOfferSlider .slick-list {
+  padding: 10px 0px;
+}
+
+.whiteNav .slick-arrow:before {
+  color: var(--White-color) !important;
+  border-color: var(--active-color) !important;
+  opacity: 0.8 !important;
+  font-size: 20px !important;
+}
+
+/* categories slider */
+.FoodAndNutritionCategorieSlider .slick-list {
+  padding: 10px 0px;
+}
+.FoodAndNurtiImg {
+  height: 80px;
+  width: 100px;
+}
+/* bulk orders sections cards */
+.bulkCardsWrapper {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(154px, 3fr));
+}
+.bulkCards img {
+  height: 200px;
+}
+@media only screen and (max-width: 668px) {
+  .bulkCardsWrapper {
+    gap: 6px;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 3fr));
+  }
+  .bulkCards img {
+    height: 150px;
+  }
+}
+@media only screen and (max-width: 992px) {
+  .CustomOffcan-lg-end.OfcanvasH-80 {
+    height: 80vh !important;
+    border-top-left-radius: var(--bs-border-radius-xxl) !important;
+    border-top-right-radius: var(--bs-border-radius-xxl) !important;
+  }
+}
+/* product cards start */
+.ProductCardsWrapper {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(279px, 1fr));
+}
+.FoodCardsImg {
+  height: 150px;
+  object-fit: cover;
+  width: 100%;
+  object-position: center;
+}
+.timeDistBar {
+  position: absolute;
+  width: 170px !important;
+  /* clip-path: polygon(0px 0px, 100% 0%, 85% 100%, 0% 100%); */
+  clip-path: polygon(31px -66px, 101% 108%, -3% 102%, -12% 0);
+  background-color: white;
+}
+.dotSpace {
+  width: 5px;
+  display: inline-block;
+  height: 5px;
+  background: currentColor;
+  border-radius: 50%;
+  margin: auto 0;
+}
+/* product card Items  */
+.ProductCardItemsWrapper {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+}
+/* food and nurtrition cart css start */
+.productCard {
+  border-radius: 0% !important;
+}
+.FoodCart .lisssss:last-of-type .productCard {
+  border-bottom: 0px !important;
+}
+
+.btn-check + .customRadioBorderRed {
+  border: 2px solid var(--bs-border-color);
+}
+.btn-check + .customRadioBorderRed:hover {
+  border: 2px solid var(--main-red-color-hover) !important;
+  background: var(--main-red-color-light);
+}
+.btn-check:checked + .customRadioBorderRed {
+  border: 2px solid var(--main-red-color-hover) !important;
+  background: var(--main-red-color-light);
+}

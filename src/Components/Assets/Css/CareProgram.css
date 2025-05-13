@@ -1,0 +1,227 @@
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;800&display=swap");
+.pricingCardsSection {
+  font-family: "Noto Sans JP", sans-serif;
+  padding: 3rem 0;
+  max-width: min(87.5rem, 90%);
+  margin: 0 auto;
+  text-align: center;
+  width: 100%;
+}
+
+.pricingCardsSection h2 {
+  font-size: 1.8rem;
+  text-transform: capitalize;
+  margin-bottom: 1.563rem;
+  color: #1b1b1b;
+}
+
+.pricingCardsSection p {
+  font-size: 1rem;
+  max-width: 50rem;
+  margin-inline: auto;
+  color: #1b1b1b;
+}
+
+.pricing-Wrapper {
+  transition: all 0.7s ease-in-out;
+  display: grid;
+    grid-template-columns: repeat(auto-fill,minmax(290px,1fr));
+  gap: 0.8em;
+  /* margin-top: 5em; */
+}
+
+.pricing-card {
+  flex: 0 1 19.9rem;
+  background: #fff;
+  text-align: center;
+  padding: 2.5em 2em;
+  border-radius: 0.625rem;
+  position: relative;
+  cursor: pointer;
+}
+
+.pricing-card li {
+  text-transform: capitalize;
+  font-size: 1rem;
+}
+
+.pricing-card .ribbon {
+  position: absolute;
+  width: 2.5rem;
+  height: 6.875rem;
+  background: #b62828;
+  top: -0.625rem;
+  left: 1.563rem;
+  transition: opacity 0.3s ease-in;
+  visibility: hidden;
+  opacity: 0;
+}
+
+.pricing-card .ribbon > div {
+  transform: rotate(-90deg);
+  color: #fff;
+  text-transform: uppercase;
+  font-weight: bold;
+  margin-top: 0.625rem;
+  margin-bottom: 0.625rem;
+}
+
+.pricing-card .ribbon svg {
+  width: 0.625rem;
+  color: #1b1b1b;
+}
+
+.pricing-card .ribbon::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: -0.563rem;
+  border-left: 0.313rem solid #b62828;
+  border-right: 0.313rem solid transparent;
+  border-top: 0.313rem solid transparent;
+  border-bottom: 0.313rem solid #b62828;
+}
+
+.pricing-card .ribbon::after {
+  content: "";
+  position: absolute;
+  bottom: -0.063rem;
+  left: 0;
+  border-left: 1.25rem solid transparent;
+  border-right: 1.25rem solid transparent;
+  border-top: 1.25rem solid transparent;
+  border-bottom: 1.25rem solid #1b1b1b;
+}
+
+.pricing-card hr {
+  display: block;
+  width: 35%;
+  margin: 0 auto;
+  margin-top: 1.875rem;
+  margin-bottom: 1.563rem;
+  visibility: visible;
+}
+
+.pricing-card hr.first {
+  background: #d6d4d3;
+  height: 0.156rem;
+  border: none;
+}
+
+.pricing-card hr.second {
+  background: #1b1b1b;
+  height: 0.25rem;
+  border: none;
+}
+
+.pricing-card h3 {
+  color: #1b1b1b;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  letter-spacing: 0.063rem;
+}
+
+.pricing-card .card-price {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #1b1b1b;
+  margin: 1.563rem 0;
+}
+
+.pricing-card .card-price span {
+  color: #1b1b1b;
+  font-size: 1.1rem;
+  margin-right: 0.625rem;
+}
+
+.pricing-card .card-btn {
+  background: #d6d4d3;
+  color: #1b1b1b;
+  text-transform: uppercase;
+  font-weight: bold;
+  font-size: 0.9rem;
+  padding: 0.5rem 1.875rem;
+  display: inline-block;
+  transition: opacity 0.3s ease-in;
+  visibility: hidden;
+  opacity: 0;
+}
+
+.pricing-card.active {
+  background: var(--main-color-);
+  color: #a3a3a3;
+}
+
+.pricing-card.active li {
+  font-size: 1.063rem;
+}
+
+.pricing-card.active .ribbon {
+  opacity: 1;
+  visibility: visible;
+}
+
+.pricing-card.active:hover .card-btn {
+  background: #fff;
+}
+
+.pricing-card.active hr {
+  opacity: 0;
+  margin: 0;
+  visibility: hidden;
+}
+
+.pricing-card.active h3 {
+  color: #d6d4d3;
+}
+
+.pricing-card.active .card-price span {
+  color: #d6d4d3;
+}
+
+.pricing-card.active .card-price {
+  color: #fff;
+}
+.pricing-card .features {
+  list-style: inside;
+  text-align: start;
+  margin-inline: 26px !important;
+}
+.pricing-card .features li {
+  font-size: 13px;
+  color: #080808;
+}
+.pricing-card.active .features li {
+  font-size: 13px;
+  color: #ffffff;
+}
+.pricing-card.active .card-btn {
+  background: #d6d4d3;
+  color: #1b1b1b;
+  opacity: 1;
+  margin-top: 2.813rem;
+  visibility: visible;
+}
+
+
+
+/* survey page  */
+
+
+.bg-imagejkhndwyh{
+  background-image: url(https://img.freepik.com/free-photo/thermometer-with-high-temperature-pills_23-2150471134.jpg  );
+  background-repeat: no-repeat;
+  background-size: cover;
+  width: 100%;
+  height: 250px;
+}
+.bg-uawhiqwjhihahwe{
+  background-image: url(https://diabetesresearchconnection.org/wp-content/uploads/2023/12/blue-ct-bg.png );
+  background-repeat: no-repeat;
+  background-size: cover;
+  width: 100%;
+  height: 250px;
+}

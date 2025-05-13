@@ -1,0 +1,50 @@
+.notification-list-scroll {
+    max-height: 300px; /* Set the height as per your requirement */
+    overflow-y: auto;
+  }
+  .navAndTabs1 .nav-item .nav-link {
+    align-items: center;
+    color: var(--dashui-gray-600);
+    display: flex;
+    font-weight: 500;
+    line-height: 1.8;
+    padding: 0.5rem 1.5rem;
+    -webkit-transition: all 0.5s;
+    transition: all 0.5s;
+    white-space: nowrap;
+  }
+  .navAndTabs1 .nav-item .nav-link:hover {
+    /* color: var(--dashui-primary); */
+    color: var(--dashui-gray-100);
+    width: 90%;
+    border-top-right-radius: 20px;
+    border-bottom-right-radius: 20px;
+    background-color: var(--dashui-primary);
+  
+  }
+  .navAndTabs1 .nav-item .nav-link.active {
+    color: var(--dashui-primary);
+    color: var(--dashui-gray-100);
+    width: 90%;
+    border-top-right-radius: 20px;
+    border-bottom-right-radius: 20px;
+    background-color: var(--dashui-primary);
+  }
+  .rightside-chart label{
+    font-weight: 900 !important;
+  }
+  .abhiii{
+    color:#3D3F96 !important;
+  }
+  .abhiii:hover{
+    color: red !important;
+    transition: 2s !important;
+    transform: scale(1.2) !important;
+
+  }
+
+
+
+
+
+

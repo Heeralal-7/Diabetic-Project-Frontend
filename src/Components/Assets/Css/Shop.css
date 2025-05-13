@@ -1,0 +1,593 @@
+/* Shop main page start */
+
+@import url("https://fonts.googleapis.com/css?family=Open+Sans:400,700&display=swap");
+
+/*-- VARIABLES CSS--*/
+/*Colores*/
+:root {
+  --first-color: #d2f2fc;
+  /* --first-color: #E3F8FF; */
+  --second-color: #dcdefb;
+  --third-color: #f9d8cb;
+  /* --first-color: #94c4d4;
+    --second-color: #b7bbf2;
+    --third-color: #ffb99e; */
+  --accent-color: #ff5151;
+  --dark-color: #161616;
+}
+
+/* Tipografia responsive*/
+:root {
+  --body-font: "Open Sans";
+  --h1-font-size: 1.5rem;
+  --h3-font-size: 1rem;
+  --normal-font-size: 0.938rem;
+  --smaller-font-size: 0.75rem;
+}
+
+@media screen and (min-width: 768px) {
+  :root {
+    --h1-font-size: 2rem;
+    --normal-font-size: 1rem;
+    --smaller-font-size: 0.813rem;
+  }
+}
+
+.bd-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  /* max-width: 1200px; */
+  margin-left: 2.5rem;
+  margin-right: 2.5rem;
+  align-items: center;
+  gap: 2rem;
+}
+
+/*-- PAGES --*/
+.mainTitle-shop {
+  position: relative;
+  margin: 0 2.5rem;
+}
+
+.mainTitle-shop::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 72px;
+  height: 2px;
+  background-color: var(--dark-color);
+  margin-left: 0.25rem;
+}
+
+/*-- COMPONENT --*/
+.ShopProductCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  border-radius: 1rem;
+  overflow: hidden;
+}
+.ShopProductCardsColorTheame article:nth-child(3n + 1) {
+  background-color: var(--first-color);
+}
+.ShopProductCardsColorTheame article:nth-child(3n + 2) {
+  background-color: var(--second-color);
+}
+.ShopProductCardsColorTheame article:nth-child(3n + 3) {
+  background-color: var(--third-color);
+}
+
+.ShopProductCard__img {
+  max-width: 100%;
+  width: 180px;
+  height: auto;
+  padding: 1rem 0;
+  transition: 0.5s;
+}
+
+.ShopProductCard__name {
+  position: absolute;
+  left: -25%;
+  top: 0;
+  width: 3.5rem;
+  height: 100%;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  text-align: center;
+  background-color: var(--dark-color);
+  color: #fff;
+  font-weight: bold;
+  transition: 0.5s;
+}
+
+.ShopProductCard__icon {
+  font-size: 1.5rem;
+  color: var(--dark-color);
+}
+
+.ShopProductCard__icon:hover {
+  color: var(--accent-color);
+}
+
+.ShopProductCard__precis {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  transition: 0.5s;
+}
+
+.ShopProductCard__preci {
+  display: block;
+  text-align: center;
+}
+
+.ShopProductCard__preci--before {
+  font-size: var(--smaller-font-size);
+  color: var(--accent-color);
+  margin-bottom: 0.25rem;
+  text-decoration: line-through;
+}
+
+.ShopProductCard__preci--now {
+  font-size: var(--h3-font-size);
+  font-weight: bold;
+}
+
+/*Move left*/
+.ShopProductCard:hover {
+  box-shadow: 0 0.5rem 1rem #d1d9e6;
+}
+
+.ShopProductCard:hover .ShopProductCard__name {
+  left: 0;
+}
+
+.ShopProductCard:hover .ShopProductCard__img {
+  transform: rotate(30deg);
+  margin-left: 3.5rem;
+}
+
+.ShopProductCard:hover .ShopProductCard__precis {
+  margin-left: 3.5rem;
+  padding: 0 1.5rem;
+}
+
+/* Shop main page end */
+
+.carouselHeight {
+  height: 100vh;
+  max-height: 500px;
+  background: #000;
+}
+
+.carouselCaption {
+  padding-bottom: 80px;
+}
+
+/* Background images are set within the HTML using inline CSS, not here */
+
+.shopCarouselBg {
+  width: 100%;
+  height: 100%;
+  background-position: center;
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  background-size: cover;
+  -o-background-size: cover;
+  opacity: 0.8;
+}
+
+/**
+* Button
+*/
+.carousel-control-prev.carousel-control-next {
+  opacity: 0.4 !important;
+}
+.carousel-control-prev:hover {
+  background: linear-gradient(
+    to left,
+    rgba(0, 0, 0, 0.0001) 0,
+    rgba(0, 0, 0, 0.5) 100%
+  );
+}
+
+.carousel-control-next:hover {
+  background: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.0001) 0,
+    rgba(0, 0, 0, 0.5) 100%
+  );
+}
+.customIndicators {
+  gap: 30px;
+}
+
+.customIndicators button {
+  border-radius: 50%;
+  width: 15px !important;
+  height: 15px !important;
+  padding: 4px;
+  position: relative;
+  margin: 0 15px;
+  background-color: transparent;
+  opacity: 1;
+}
+
+.customIndicators button:after {
+  border-radius: 50%;
+  padding: 10px;
+  border: 4px solid #fff;
+  position: absolute;
+  content: "";
+  top: -7px;
+  left: -7px;
+  bottom: -7px;
+  right: -7px;
+}
+
+.customIndicators button.active {
+  background-color: white;
+}
+
+/* Classes to use these animations */
+
+.fadeInRight {
+  animation-name: fadeInRight;
+}
+
+.fadeInLeft {
+  animation-name: fadeInLeft;
+}
+
+.fadeInUp {
+  animation-name: fadeInUp;
+}
+
+.fadeInDown {
+  animation-name: fadeInDown;
+}
+
+.fadeInTopLeftDown {
+  animation-name: fadeInTopLeftDown;
+}
+
+/**
+* Change animation duration
+*/
+.animated {
+  animation-duration: 1.5s;
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translate3d(300px, 0, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translate3d(-300px, 0, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 300px, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -300px, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fadeInTopLeftDown {
+  from {
+    opacity: 0;
+    transform: translate3d(-300px, -300px, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* shop offer ribbon */
+.ribbon {
+  width: 100px;
+  height: 100px;
+  color: var(--White-color);
+  overflow: hidden;
+  position: absolute;
+}
+
+.ribbon::before,
+.ribbon::after {
+  position: absolute;
+  z-index: -1;
+  content: "";
+  display: block;
+  border: 3px solid var(--dark-color);
+}
+
+.ribbon span {
+  position: absolute;
+  display: block;
+  font-size: smaller;
+  width: 165px;
+  padding: 5px 0;
+  background-color: red;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+}
+.ribbonTopLeft {
+  top: -3px;
+  left: -3px;
+}
+
+.ribbonTopLeft::before,
+.ribbonTopLeft::after {
+  border-top-color: transparent;
+  border-left-color: transparent;
+}
+
+.ribbonTopLeft::before {
+  top: 0;
+  right: 0;
+}
+
+.ribbonTopLeft::after {
+  bottom: 0;
+  left: 0;
+}
+
+.ribbonTopLeft span {
+  right: -22px;
+  top: 30px;
+  transform: rotate(-45deg);
+}
+/* top right*/
+.ribbonTopRight {
+  top: -3px;
+  right: -3px;
+}
+
+.ribbonTopRight::before,
+.ribbonTopRight::after {
+  border-top-color: transparent;
+  border-right-color: transparent;
+}
+
+.ribbonTopRight::before {
+  top: 0;
+  left: 0;
+}
+
+.ribbonTopRight::after {
+  bottom: 22px;
+  right: 0;
+}
+
+.ribbonTopRight span {
+  left: -22px;
+  top: 30px;
+  transform: rotate(45deg);
+}
+.ribbonTopRight.smalll span {
+  left: -22px;
+  top: 14px;
+  transform: rotate(39deg);
+}
+/* shop offer ribbon end*/
+/* categories start */
+.cardShadowww {
+  box-shadow: 5px 6px 30px #bebebe, 3px -15px 30px #ffffff;
+}
+.cardShadowww:hover {
+  box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.1);
+}
+/* .ShopCategorieWrapper{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+    gap: 10px;
+} */
+.ShopCategorieWrapper {
+  padding: 20px 10px;
+  /* display: flex;
+  flex-wrap: nowrap; */
+  overflow-x: auto;
+  /* grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr)); */
+  gap: 10px;
+  margin: 0 auto;
+  display: grid;
+  grid-auto-flow: column;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+}
+.ShopCategorieWrapper .card {
+  min-width: 9rem;
+  width: 100%;
+  scroll-snap-align: start;
+}
+
+/* horizontal snap css start */
+.horizontal-snap {
+  margin: 0 auto;
+
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+}
+
+.horizontal-snap .card {
+  scroll-snap-align: center;
+}
+
+/* horizontal snap css end */
+
+.ShopCateTittle {
+  font-size: clamp(12px, 4vw, 15px);
+  font-weight: 700 !important;
+}
+.ShopCateImg {
+  max-width: 90px;
+  width: 60vw !important;
+}
+
+/* shop cart page start */
+
+.productCartCard {
+  border-radius: 0% !important;
+}
+.productShopCart li:last-child .productCartCard {
+  border-bottom: 0 !important;
+}
+.productCartCard .productCardImg {
+  max-width: 80px;
+  height: 120px;
+}
+.btn-check + .customRadioBorderBlue {
+  border: 2px solid var(--bs-border-color);
+}
+.btn-check + .customRadioBorderBlue:hover {
+  border: 2px solid var(--main-color-hover) !important;
+  background: var(--lightBlue-color);
+}
+.btn-check:checked + .customRadioBorderBlue {
+  border: 2px solid var(--main-color-hover) !important;
+  background: var(--lightBlue-color);
+}
+/* shop Cart custom input start  */
+.customInput1 {
+  position: relative;
+  /* margin: 20px auto; */
+  width: 90%;
+}
+
+.customInput1 input {
+  font-size: 20px;
+  width: 100%;
+  border: none;
+  border-bottom: 2px solid #ccc;
+  /* border: 1px solid #ccc; */
+  padding: 5px 0;
+  background-color: transparent;
+  outline: none;
+}
+
+.customInput1 .customInputLabel1 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  /* color: #ccc; */
+  color: var(--main-blue-color);
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.customInput1 input:focus ~ .customInputLabel1,
+.customInput1 input:valid ~ .customInputLabel1 {
+  top: -20px;
+  font-size: 16px;
+  color: #333;
+}
+
+.customInput1 .underline {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  background-color: #333;
+  transform: scaleX(0);
+  transition: all 0.3s ease;
+}
+
+.customInput1 input:focus ~ .underline,
+.customInput1 input:valid ~ .underline {
+  transform: scaleX(1);
+}
+
+/* CUSTOM RADIO START */
+
+/* CUSTOM RADIO END */
+/* shop Cart custom input end */
+
+/* cart page start */
+/* Swipper css start  */
+.swiper {
+  padding-top: 30px !important;
+  padding-bottom: 30px !important;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.swiper-slide {
+  text-align: center;
+  font-size: 16px;
+  background: #fff;
+  /* Center slide text vertically */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.swiper-button-next,
+.swiper-button-prev {
+  background-color: white;
+  box-shadow: rgba(50, 50, 93, 0.25) 0px 6px 12px -2px,
+    rgba(0, 0, 0, 0.3) 0px 3px 7px -3px;
+  background-position: center;
+  top: 25px !important;
+  background-size: 30px;
+  background-repeat: no-repeat;
+  color: var(--main-blue-color) !important;
+  /* padding: 8px 16px; */
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 100% !important;
+  border: 2px solid currentColor !important;
+}
+
+.swiper-button-prev {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='rgb(54 84 179)'%3E%3Cpath d='M4.83578 12L11.0429 18.2071L12.4571 16.7929L7.66421 12L12.4571 7.20712L11.0429 5.79291L4.83578 12ZM10.4857 12L16.6928 18.2071L18.107 16.7929L13.3141 12L18.107 7.20712L16.6928 5.79291L10.4857 12Z'%3E%3C/path%3E%3C/svg%3E");
+  right: 60px !important;
+  left: unset !important;
+}
+
+.swiper-button-next {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='rgb(54 84 179)'%3E%3Cpath d='M19.1642 12L12.9571 5.79291L11.5429 7.20712L16.3358 12L11.5429 16.7929L12.9571 18.2071L19.1642 12ZM13.5143 12L7.30722 5.79291L5.89301 7.20712L10.6859 12L5.89301 16.7929L7.30722 18.2071L13.5143 12Z'%3E%3C/path%3E%3C/svg%3E") !important;
+}
+
+.swiper-button-next::after,
+.swiper-button-prev::after {
+  content: "" !important;
+}
+
+/* Swipper css end */

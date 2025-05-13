@@ -1,0 +1,160 @@
+.ClinicWrapper {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(265px, 1fr));
+  gap: 30px;
+}
+
+.ClinicCards {
+  overflow: hidden;
+  box-shadow: 0px 2px 20px #d7dfe2;
+  background: white;
+  border-radius: 1rem;
+  position: relative;
+  width: 100%;
+  transition: 250ms all ease-in-out;
+  cursor: pointer;
+  box-shadow: 5px 6px 30px #bebebe, 3px -15px 30px #ffffff;
+}
+
+.ClinicCards:hover {
+  transform: scale(1.05);
+  box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.ClinicCardsBanner-img {
+  object-fit: cover;
+  max-height: 340px;
+  height: 100%;
+  width: 100%;
+}
+
+.ClinicCardsCategory-tag {
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: white;
+  background: red;
+  padding: 0.5rem 1.3rem 0.5rem 1rem;
+  text-transform: uppercase;
+  position: absolute;
+  z-index: 1;
+  top: 1rem;
+  border-radius: 0 2rem 2rem 0;
+}
+
+.pinkText {
+  background: #ef257a;
+}
+
+.purpleText {
+  background: #651fff;
+}
+
+.blueText {
+  background: #3655b3;
+}
+.orangeText {
+  background: #e85808;
+}
+
+.ClinicCards-body {
+  margin: 1rem;
+}
+
+
+.blog-title {
+  line-height: 1.8rem;
+  margin: 1rem 0 0.5rem;
+}
+
+.blog-description {
+  color: #616b74;
+  font-size: 0.9rem;
+}
+
+/* Clinic Page details Css start */
+
+
+.ClinicPageBanner {
+  background-color: #616b74;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-size: cover; 
+  background-position:center center ;
+  width: 100%;
+  z-index: -1;
+  /* height: 90vh; */
+  height: calc(90vh - 70px);
+
+}
+.cardhoverr-translate {
+  transition: 1s;
+  border-radius: 10px;
+  box-shadow: 5px 6px 30px #bebebe, 3px -15px 30px #ffffff;
+}
+
+.cardhoverr-translate:hover {
+  transform: translateY(-30px);
+  background-color: var(--bs-primary-bg-subtle);
+  color: rgb(4, 4, 4);
+  border-radius: 30px;
+  box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.after-linessss {
+  position: relative;
+}
+
+.after-linessss::after {
+  content: "";
+  height: 2px;
+  width: 100px;
+
+  display: block;
+  background-color: rgb(26, 83, 100);
+  margin: auto !important;
+
+}
+
+.hghg-bg-image {
+  background-image: url(https://img.freepik.com/free-photo/woman-doctor-white-uniform-standing-hall_1157-33391.jpg);
+  background-position:right !important;
+  background-repeat: no-repeat;
+  background-size: cover; 
+  background-position-y:top !important;
+  max-height:540px;
+  height: 100vh;
+  width: 100%;
+}
+
+.ghyyhgh {
+  background-color: rgba(37, 197, 197, 0.313);
+  height: 100%;
+  width: 100%;
+  padding: 0 !important;
+}
+
+.wesd-gover {
+  background-image: url(https://oladoc.com/dist/images/home-appt-2xx_compressed.webp);
+  background-repeat: no-repeat;
+  height: 220px;
+  background-size: cover; 
+  background-position:center center ;
+  width: 100%;
+}
+
+.hover-iconnnniki {
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.564);
+  display: none;
+}
+
+.wesd-gover:hover .hover-iconnnniki {
+  display: block;
+  color: white;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+}
+/* Clinic Page details Css end */
