@@ -27,6 +27,12 @@ import PharmacyProductItem from "../Pages/Pharmacy/PharmacyProductItem";
 import {Login, OtpVerify } from "../Pages/Signup/Login";
 import { CaregiverDetails, Register, RegisterStep2 } from "../Pages/Signup/Register";
 import ProtectUser from "../../ProtectUser";
+import MealDetails from "../Pages/FoodAndNutrition/FAndNComponents/MealsDetails";
+import CravingFoodDetails from "../Pages/FoodAndNutrition/FAndNComponents/CravingFoodDetails";
+import CartPage from "../Pages/FoodAndNutrition/FAndNComponents/CartCard";
+import OrderSuccess from "../Pages/FoodAndNutrition/FAndNComponents/OrderSuccess";
+import OrderHistory from "../Pages/FoodAndNutrition/FAndNComponents/OrderHistory";
+import OrderDetails from "../Pages/FoodAndNutrition/FAndNComponents/OrderDetails";
 
 const MainRoutes = () => {
   return (
@@ -61,6 +67,16 @@ const MainRoutes = () => {
           path="/shop/FoodAndNurition/Products"
           element={<ProductsItems />}
         />
+        <Route path="/shop/FoodAndNurition/meal/:id" element={<MealDetails />} />
+        <Route path="/foodname/:foodName" element={<CravingFoodDetails />} />
+        <Route path="/shop/FoodAndNurition/meal/cart" element={<CartPage />} />
+        <Route path="/shop/FoodAndNurition/order-success" element={<OrderSuccess />} />
+        <Route path="/shop/FoodAndNurition/orders" element={<OrderHistory />} />
+        <Route path="/shop/FoodAndNurition/order-details/:id" element={<OrderDetails />} />
+
+
+
+
         <Route path="/shop/FoodAndNurition/Cart" element={<ProductCart />} />
         <Route path="/Pharmacy" element={<HomePharmacy />} />
         <Route path="/Pharmacy/shop-details" element={<PharmacyProfile />} />

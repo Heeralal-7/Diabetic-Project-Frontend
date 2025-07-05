@@ -158,12 +158,12 @@ const User = () => {
       </button>
      
                         <Link to={`/dashboard/lab/userview/${d._id}`}>
-                          {/* <button
+                          <button
                             className="btn btn-secondary bg-opacity-25 bg-gradient"
                             type="button"
                           >
                             View
-                          </button> */}
+                          </button>
                         </Link>
                       </div>
                     </td>

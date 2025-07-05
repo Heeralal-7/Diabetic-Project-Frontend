@@ -54,7 +54,7 @@ const productsItemsData = [
 {
 isBestseller: true,
 veg: true,
-title: "Standard Thali - Trail",
+title: "Standard 111 Thali - Trail",
 rating: 3.6,
 originalPrice: 136.00,
 discountedPrice: 119,

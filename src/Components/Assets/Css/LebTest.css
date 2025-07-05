@@ -1,0 +1,13 @@
+.image-container {
+  overflow: hidden;
+  display: inline-block;
+}
+
+.zoom-hover {
+  transition: transform 0.4s ease;
+  display: block;
+}
+
+.zoom-hover:hover {
+  transform: scale(1.05);
+}

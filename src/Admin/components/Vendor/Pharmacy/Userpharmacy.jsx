@@ -116,9 +116,9 @@ const Userpharmacy = () => {
                                                         {d.isActive ? 'Disable' : 'Enable'}
                                                     </button>
                                                     <Link to={`/dashboard/pharmacy/viewuser/${d._id}`}>
-                                                        {/* <button className="btn btn-secondary bg-opacity-25 bg-gradient" type="button">
+                                                        <button className="btn btn-secondary bg-opacity-25 bg-gradient" type="button">
                                                             View
-                                                        </button> */}
+                                                        </button>
                                                     </Link>
                                                 </div>
                                             </td>

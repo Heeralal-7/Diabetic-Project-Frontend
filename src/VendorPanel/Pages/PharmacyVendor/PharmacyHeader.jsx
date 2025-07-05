@@ -11,7 +11,7 @@ const PharmacyHeader = () => {
     const navigate = useNavigate();
   
     const handleLogout = () => {
-      sessionStorage.removeItem("vendortoken");
+      sessionStorage.removeItem("Pharmacytoken");
       sessionStorage.removeItem("admin");
       toast.success("Logged out successfully");
       setTimeout(() => {

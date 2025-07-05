@@ -38,27 +38,36 @@ const VendorLogin = () => {
       return;
     }
 
-    try {
-      const { data } = await axios.post(`${URL}/vendor/login`, formData);
+   try {
+    const { data } = await axios.post(`${URL}/vendor/login`, formData);
 
-      if (data.success) {
-        sessionStorage.setItem("labtoken", JSON.stringify(data.details));
-        if (formData.type === "Lab") {
-          navigate("/panel");
-        } else if (formData.type === "Pharmacy") {
-          navigate("/pharmacy-dashboard");
-        } else if (formData.type === "Food") {
-          navigate("/food-dashboard");
-        }
-        console.log(formData);
-      } else {
-        toast.error(data.message || "Login failed.");
+    if (data.success) {
+      // Token key name based on formData.type
+      let tokenKey = "";
+
+      if (formData.type === "Lab") {
+        tokenKey = "labtoken";
+        navigate("/panel");
+      } else if (formData.type === "Pharmacy") {
+        tokenKey = "Pharmacytoken";
+        navigate("/pharmacy-dashboard");
+      } else if (formData.type === "Food") {
+        tokenKey = "foodtoken";
+        navigate("/food-dashboard");
       }
-    } catch (error) {
-      console.error(error);
-      toast.error("An error occurred during login.");
+
+      // Save token using dynamic key
+      sessionStorage.setItem(tokenKey, JSON.stringify(data.details));
+
+      console.log("Login form data:", formData);
+    } else {
+      toast.error(data.message || "Login failed.");
     }
-  };
+  } catch (error) {
+    console.error("Login error:", error);
+    toast.error("An error occurred during login.");
+  }
+};
 
   return (
     <>

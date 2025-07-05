@@ -1,0 +1,28 @@
+/* Sidebar.css */
+.nav-item .dropdown .dropdown-menu{
+ 
+    padding: 5px 30px 5px 14px;
+    /* display: none; */
+   
+ 
+}
+.nav-item .dropdown:hover .dropdown-menu {
+   
+    padding: 5px 30px 5px 14px;
+    /* display: block; */
+}
+.nav-item .dropdown .dropdown-menu .nav-link a:hover {
+   background-color: transparent;
+    padding: 0px 20px 2px 14px;
+   color:white !important;
+}
+.nav-item .dropdown .dropdown-menu .nav-link a{
+   background-color: transparent;
+    padding: 0px 20px 2px 14px;
+   color:black !important;
+}
+
+
+
+ 
+ 
