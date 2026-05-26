@@ -1,720 +1,424 @@
-import { useState, useRef, useEffect, useContext } from 'react';
-import "../../Assests/css/medical.css"
-import { MyContext } from "../../../Context/Context";
+import React, { useState, useRef, useEffect, useContext, useMemo, useCallback } from 'react';
+import "../../Assests/css/medical.css"; // Ensure this path is correct
+import "../../Assests/css/MedicineProduct.css"; // Ensure this path is correct for modal styles
+import { MyContext } from "../../../Context/Context"; // Ensure this path is correct
+
+// A memoized Image component to prevent unnecessary re-renders.
+const MedicineImage = React.memo(({ src, alt, className, style, onError }) => {
+  return (
+    <img 
+      src={src} 
+      alt={alt} 
+      className={className}
+      style={style}
+      onError={onError}
+      loading="lazy"
+    />
+  );
+});
 
 function Medicines() {
   const {
     Medicines,
     getMedicines,
     updateMedicine,
-    uploadMedicineExcel, // Added from context
-    isUploading // Added from context
+    uploadMedicineExcel,
+    isUploading,
+    deleteMedicineAdmin:deleteMedicine,
+    deleteMultipleMedicinesAdmin:deleteMultipleMedicines,
+    isDeleting
   } = useContext(MyContext);
 
-  // State for scroll toggle and edit mode
-  const [showScrollToggle, setShowScrollToggle] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
+  // Component State
   const [editingRowId, setEditingRowId] = useState(null);
   const [editableMedicines, setEditableMedicines] = useState([]);
   const [selectedMedicine, setSelectedMedicine] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [savingMedicine, setSavingMedicine] = useState(null);
-  const scrollContainerRef = useRef(null);
-
-  // NEW STATE FOR EXCEL UPLOAD
   const [excelFile, setExcelFile] = useState(null);
   const fileInputRef = useRef(null);
+  const [selectedIds, setSelectedIds] = useState([]);
 
-  // Load medicines data on component mount
+  // Default visible columns
+  const [visibleColumns, setVisibleColumns] = useState(new Set([
+    'Id', 'name', 'manufacturers', 'mrp', 'best_price', 'prescription_required', 'for_sale', 'actions', 'image_url'
+  ]));
+
+  const dummyImages = useMemo(() => [
+    "https://images.pexels.com/photos/3873209/pexels-photo-3873209.jpeg",
+    "https://images.pexels.com/photos/51929/medications-cure-tablets-pharmacy-51929.jpeg",
+    "https://images.pexels.com/photos/208512/pexels-photo-208512.jpeg"
+  ], []);
+  
+  // Memoized table headers
+  const tableHeaders = useMemo(() => [
+    { key: 'Id', label: 'ID' },
+    { key: 'name', label: 'Medicine Name' },
+    { key: 'manufacturers', label: 'Manufacturer' },
+    { key: 'salt_composition', label: 'Salt Composition' },
+    { key: 'packaging', label: 'Packaging' },
+    { key: 'mrp', label: 'MRP' },
+    { key: 'best_price', label: 'Best Price' },
+    { key: 'discont_percent', label: 'Discount %' },
+    { key: 'prescription_required', label: 'Prescription Required' },
+    { key: 'image_url', label: 'Image' },
+    { key: 'primary_use', label: 'Primary Use' },
+    { key: 'description', label: 'Description' },
+    { key: 'storage', label: 'Storage' },
+    { key: 'introduction', label: 'Introduction' },
+    { key: 'use_of', label: 'Use Of' },
+    { key: 'benefits', label: 'Benefits' },
+    { key: 'side_effect', label: 'Side Effects' },
+    { key: 'how_to_use', label: 'How to Use' },
+    { key: 'how_works', label: 'How it Works' },
+    { key: 'safety_advise', label: 'Safety Advice' },
+    { key: 'for_sale', label: 'For Sale' },
+    { key: 'rating', label: 'Rating' },
+    { key: 'expectedDelivery', label: 'Expected Delivery' },
+    { key: 'bread_crumb', label: 'Category' },
+    { key: 'url', label: 'URL' },
+    { key: 'actions', label: 'Actions' }
+  ], []);
+
+  // Lifecycle hook to fetch data on mount
   useEffect(() => {
     getMedicines();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Update editable medicines when Medicines context changes
+  // Effect to sync local editable state with context
   useEffect(() => {
     if (Medicines && Medicines.length > 0) {
       setEditableMedicines([...Medicines]);
     }
   }, [Medicines]);
 
-  // Get current medicines based on edit mode
-  const currentMedicines = editableMedicines.length > 0 ? editableMedicines : Medicines;
+  const currentMedicines = editableMedicines.length > 0 ? editableMedicines : (Medicines || []);
 
-  // Show toggle button when scrollbar is needed
-  useEffect(() => {
-    const checkScrollWidth = () => {
-      if (scrollContainerRef.current) {
-        const { scrollWidth, clientWidth } = scrollContainerRef.current;
-        setShowScrollToggle(scrollWidth > clientWidth);
-      }
-    };
-    
-    checkScrollWidth();
-    window.addEventListener('resize', checkScrollWidth);
+  // --- EVENT HANDLERS (wrapped in useCallback for performance) ---
 
-    return () => {
-      window.removeEventListener('resize', checkScrollWidth);
-    };
-  }, [currentMedicines]);
-
-  // Toggle full view (scroll to end) function
-  const toggleFullView = () => {
-    if (scrollContainerRef.current) {
-      if (!isExpanded) {
-        scrollContainerRef.current.scrollLeft = scrollContainerRef.current.scrollWidth;
-      } else {
-        scrollContainerRef.current.scrollLeft = 0;
-      }
-      setIsExpanded(!isExpanded);
-    }
-  };
-
-  // NEW: EXCEL UPLOAD HANDLERS
-  const handleFileChange = (e) => {
+  const handleFileChange = useCallback((e) => {
     const file = e.target.files[0];
-    if (!file) return;
-    
-    // Validate file type
-    const validTypes = ['.xlsx', '.xls', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
-    const fileExtension = file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
-    
-    if (!validTypes.includes(fileExtension) && !validTypes.includes(file.type)) {
-      alert("Please select a valid Excel file (.xlsx or .xls)");
-      e.target.value = ''; // Reset input
-      return;
+    if (file) {
+      setExcelFile(file);
     }
-    
-    setExcelFile(file);
-  };
+  }, []);
 
-  const handleExcelUpload = async (e) => {
+  const handleExcelUpload = useCallback(async (e) => {
     e.preventDefault();
     if (!excelFile) {
       alert("Please select a file first");
       return;
     }
-    
-    try {
-      await uploadMedicineExcel(excelFile);
-      // Clear file input after upload
+    const result = await uploadMedicineExcel(excelFile);
+    if (result && result.success) {
       setExcelFile(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
-      // Refresh medicines data
-      getMedicines();
-    } catch (error) {
-      console.error("Upload failed:", error);
+      getMedicines(); // Refresh data after upload
     }
-  };
+  }, [excelFile, uploadMedicineExcel, getMedicines]);
 
-  // Enhanced Edit function with API integration
-  const handleEdit = async (medicineId) => {
-    if (editingRowId === medicineId) {
-      // Save changes for specific medicine
-      setSavingMedicine(medicineId); // Set loading state
+  const handleEdit = useCallback((medicineId) => {
+    setEditingRowId(medicineId);
+  }, []);
+
+  const handleSave = useCallback(async (medicineId) => {
+    setSavingMedicine(medicineId);
+    try {
+      const updatedMedicine = editableMedicines.find(med => med._id === medicineId);
+      const { _id, __v, ...medicineData } = updatedMedicine;
       
-      try {
-        const updatedMedicine = editableMedicines.find(med => med._id === medicineId);
-        console.log("Saving changes for medicine:", updatedMedicine);
-        
-        // Prepare medicine data for API (exclude _id and other system fields)
-        const medicineData = {
-          Id: updatedMedicine.Id,
-          name: updatedMedicine.name,
-          manufacturers: updatedMedicine.manufacturers,
-          salt_composition: updatedMedicine.salt_composition,
-          mrp: updatedMedicine.mrp,
-          best_price: updatedMedicine.best_price,
-          discont_percent: updatedMedicine.discont_percent,
-          prescription_required: updatedMedicine.prescription_required,
-          packaging: updatedMedicine.packaging,
-          expectedDelivery: updatedMedicine.expectedDelivery,
-          rating: updatedMedicine.rating,
-          bread_crumb: updatedMedicine.bread_crumb,
-          storage: updatedMedicine.storage,
-          for_sale: updatedMedicine.for_sale,
-          primary_use: updatedMedicine.primary_use,
-          introduction: updatedMedicine.introduction,
-          how_to_use: updatedMedicine.how_to_use,
-          how_works: updatedMedicine.how_works,
-          side_effect: updatedMedicine.side_effect,
-          safety_advise: updatedMedicine.safety_advise,
-          alternate_brand: updatedMedicine.alternate_brand,
-          url: updatedMedicine.url
-        };
-
-        // Call API to update medicine
-        const result = await updateMedicine(medicineId, medicineData);
-        
-        if (result.success) {
-          console.log("Medicine updated successfully:", result.data);
-          setEditingRowId(null);
-          // Refresh medicines data to get updated information
-          getMedicines();
-        } else {
-          console.error("Failed to update medicine:", result.error);
-          // You might want to revert changes or show an error message
-        }
-      } catch (error) {
-        console.error("Error during medicine update:", error);
-      } finally {
-        setSavingMedicine(null); // Clear loading state
+      const result = await updateMedicine(medicineId, medicineData);
+      if (result && result.success) {
+        setEditingRowId(null);
+        getMedicines(); // Refresh data
       }
-    } else {
-      // Enter edit mode for specific medicine
-      if (editableMedicines.length === 0) {
-        setEditableMedicines([...Medicines]);
-      }
-      setEditingRowId(medicineId);
+    } finally {
+      setSavingMedicine(null);
     }
-  };
+  }, [editableMedicines, updateMedicine, getMedicines]);
 
-  // Check if specific row is in edit mode
-  const isRowInEditMode = (medicineId) => {
-    return editingRowId === medicineId;
-  };
+  const handleCancel = useCallback(() => {
+    setEditingRowId(null);
+  }, []);
 
-  // Check if medicine is being saved
-  const isMedicineSaving = (medicineId) => {
-    return savingMedicine === medicineId;
-  };
+  const handleInputChange = useCallback((id, field, value) => {
+    setEditableMedicines(medicines =>
+      medicines.map(med => (med._id === id ? { ...med, [field]: value } : med))
+    );
+  }, []);
+  
+  const handleDelete = useCallback(async (medicineId) => {
+    if (window.confirm("Are you sure you want to delete this medicine?")) {
+      await deleteMedicine(medicineId);
+    }
+  }, [deleteMedicine]);
 
-  // Handle input change in edit mode
-  const handleInputChange = (id, field, value) => {
-    setEditableMedicines(editableMedicines.map(medicine =>
-      medicine._id === id ? { ...medicine, [field]: value } : medicine
-    ));
-  };
+  const handleDeleteSelected = useCallback(async () => {
+    if (window.confirm(`Are you sure you want to delete the ${selectedIds.length} selected medicines?`)) {
+      const result = await deleteMultipleMedicines(selectedIds);
+      if (result && result.success) {
+        setSelectedIds([]);
+      }
+    }
+  }, [deleteMultipleMedicines, selectedIds]);
 
-  // Show medicine details
-  const showDetails = (medicine) => {
+  const handleSelectRow = useCallback((id) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(rowId => rowId !== id) : [...prev, id]
+    );
+  }, []);
+
+  const handleSelectAll = useCallback(() => {
+    if (selectedIds.length === currentMedicines.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(currentMedicines.map(med => med._id));
+    }
+  }, [selectedIds.length, currentMedicines]);
+
+  const toggleColumn = useCallback((columnKey) => {
+    setVisibleColumns(prev => {
+      const newVisibleColumns = new Set(prev);
+      newVisibleColumns.has(columnKey) ? newVisibleColumns.delete(columnKey) : newVisibleColumns.add(columnKey);
+      return newVisibleColumns;
+    });
+  }, []);
+
+  const handleImageError = useCallback((e) => {
+    e.target.src = dummyImages[Math.floor(Math.random() * dummyImages.length)];
+  }, [dummyImages]);
+
+  const handleRowClick = useCallback((medicine) => {
     setSelectedMedicine(medicine);
     setShowDetailModal(true);
-  };
+  }, []);
 
-  // Format safety advice for display
-  const formatSafetyAdvice = (safetyAdvice) => {
-    if (!safetyAdvice) return 'N/A';
-    return safetyAdvice.split(' | ').map((advice, index) => (
-      <div key={index} className="mb-2">
-        <strong>{advice.split(' : ')[0]}:</strong> {advice.split(' : ')[1]}
-      </div>
-    ));
-  };
+  const visibleHeaders = useMemo(() => tableHeaders.filter(header => visibleColumns.has(header.key)), [tableHeaders, visibleColumns]);
 
-  // Format side effects for display
-  const formatSideEffects = (sideEffects) => {
-    if (!sideEffects) return 'N/A';
-    return sideEffects.split(' | ').map((effect, index) => (
-      <span key={index} className="badge text-dark me-1 mb-1 bg-light text-wrap text-start fw-semibold" style={{lineHeight:'15px'}}>{effect}</span>
-    ));
-  };
+  // --- RENDER LOGIC ---
 
-  // Show loading if no medicines data
-  if (!currentMedicines || currentMedicines.length === 0) {
-    return (
-      <div className="container-fluid px-4 py-5">
-        <h1 className="display-5 fw-bold mb-4 text-center text-primary">Medicines</h1>
-        <div className="text-center">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
+  const renderCellContent = (medicine, header) => {
+    const isEditing = editingRowId === medicine._id;
+    const value = medicine[header.key];
+
+    // **FIX**: The condition `&& header.key !== 'Id'` has been removed to make the ID field editable.
+    if (isEditing && header.key !== 'actions') {
+      // You could add specific inputs for different keys here if needed
+      // switch (header.key) { ... }
+      return <input type="text" value={value || ''} onChange={(e) => handleInputChange(medicine._id, header.key, e.target.value)} className="form-control form-control-sm" />;
+    }
+
+    // Display mode rendering
+    switch (header.key) {
+      case 'actions':
+        return (
+          <div className="d-flex justify-content-center gap-1" onClick={(e) => e.stopPropagation()}>
+            {isEditing ? (
+              <>
+                <button className="btn btn-success btn-sm" onClick={() => handleSave(medicine._id)} disabled={savingMedicine === medicine._id}>
+                  {savingMedicine === medicine._id ? <span className="spinner-border spinner-border-sm"></span> : <i className="fas fa-save"></i>}
+                </button>
+                <button className="btn btn-secondary btn-sm" onClick={handleCancel}><i className="fas fa-times"></i></button>
+              </>
+            ) : (
+              <>
+                <button className="btn btn-warning btn-sm" onClick={() => handleEdit(medicine._id)} disabled={isDeleting}><i className="fas fa-edit"></i></button>
+                <button className="btn btn-danger btn-sm" onClick={() => handleDelete(medicine._id)} disabled={isDeleting}><i className="fas fa-trash"></i></button>
+              </>
+            )}
           </div>
-          <p className="mt-2">Loading medicines data...</p>
-        </div>
-      </div>
-    );
+        );
+      case 'image_url': {
+        const imageUrl = Array.isArray(value) && value.length > 0 ? value[0] : dummyImages[0];
+        return <MedicineImage src={imageUrl} alt={medicine.name || "Medicine"} className="medicine-image" style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} onError={handleImageError} />;
+      }
+      case 'prescription_required':
+        return <span className={`badge ${value === 'YES' ? 'bg-warning text-dark' : 'bg-success'}`}>{value}</span>;
+      case 'for_sale':
+        return <span className={`badge ${value === 'FOR SALE' ? 'bg-success' : 'bg-danger'}`}>{value}</span>;
+      case 'best_price':
+        return <span className="text-success fw-bold">{value ? `₹${value}` : 'N/A'}</span>;
+       case 'mrp':
+        return <span className="fw-bold">{value ? `₹${value}` : 'N/A'}</span>;
+      default:
+        return <span className="text-truncate d-block" style={{maxWidth: '200px'}} title={value}>{value || 'N/A'}</span>;
+    }
+  };
+
+  if (!currentMedicines) {
+    return <div className="d-flex vh-100 justify-content-center align-items-center"><div className="spinner-border text-primary"></div></div>;
   }
 
   return (
     <>
-      {/* FOR UPLOAD MEDITION EXCEL FILE Start - UPDATED SECTION */}
-      <div className="container-fluid p-4">
-        <h2 className="mb-4 text-primary">Upload Medicine</h2>
-        <div className='row'>
-          <div className='col-md-8'>
-            <form onSubmit={handleExcelUpload}>
-              <div className="mb-3">
-                <label className="form-label fw-bold fs-5">Upload Excel File:</label>
-                <input 
-                  type="file" 
-                  className="form-control shadow-none py-2" 
-                  accept=".xlsx,.xls"
-                  onChange={handleFileChange}
-                  ref={fileInputRef}
-                  disabled={isUploading}
-                />
-                <div className="form-text">
-                  Only Excel files (.xlsx, .xls) are accepted
+      <div className="container-fluid py-4">
+        {/* File Upload Card */}
+        <div className='card mb-4'>
+            <div className='card-body'>
+                <h3 className="mb-3 text-primary">Upload Medicines</h3>
+                <form onSubmit={handleExcelUpload}>
+                    <div className="mb-2">
+                        <label className="form-label">Upload Excel File (.xlsx, .xls):</label>
+                        <input type="file" className="form-control" accept=".xlsx,.xls" onChange={handleFileChange} ref={fileInputRef} disabled={isUploading}/>
+                    </div>
+                    <button type="submit" className="btn btn-primary" disabled={!excelFile || isUploading}>
+                        {isUploading ? (<><span className="spinner-border spinner-border-sm me-2"></span>Uploading...</>) : 'Upload'}
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        {/* Column Visibility Card */}
+        <div className="card mb-4">
+            <div className="card-body">
+                <h5 className="card-title">Column Visibility</h5>
+                <div className="row">
+                {tableHeaders.map((header) => (
+                    <div key={header.key} className="col-md-3 col-sm-6 mb-2">
+                    <div className="form-check">
+                        <input className="form-check-input" type="checkbox" id={`col-${header.key}`} checked={visibleColumns.has(header.key)} onChange={() => toggleColumn(header.key)}/>
+                        <label className="form-check-label" htmlFor={`col-${header.key}`}>{header.label}</label>
+                    </div>
+                    </div>
+                ))}
                 </div>
-                <div className="mt-3">
-                  <button 
-                    type="submit" 
-                    className="btn btn-primary px-5 py-2"
-                    disabled={!excelFile || isUploading}
-                  >
-                    {isUploading ? (
-                      <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                        Uploading...
-                      </>
-                    ) : (
-                      <>
-                        <i className="bi bi-upload me-2"></i>Upload
-                      </>
-                    )}
-                  </button>
+            </div>
+        </div>
+
+        {/* Medicines Table Card */}
+        <div className="card">
+            <div className="card-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <h3 className="mb-0 text-primary">Medicines ({currentMedicines.length})</h3>
+                {selectedIds.length > 0 && (
+                    <button className="btn btn-danger d-flex align-items-center" onClick={handleDeleteSelected} disabled={isDeleting}>
+                        {isDeleting ? <><span className="spinner-border spinner-border-sm me-2"></span>Deleting...</> : <><i className="fas fa-trash me-2"></i>Delete Selected ({selectedIds.length})</>}
+                    </button>
+                )}
+            </div>
+            <div className="card-body">
+                <div className="table-responsive">
+                    <table className="table table-hover align-middle">
+                        <thead>
+                        <tr>
+                            <th style={{ width: '50px' }} className="text-center">
+                                <input type="checkbox" className="form-check-input" onChange={handleSelectAll} checked={currentMedicines.length > 0 && selectedIds.length === currentMedicines.length} title="Select All"/>
+                            </th>
+                            <th style={{width: '60px'}}>S.No</th> 
+                            {visibleHeaders.map(header => (
+                                <th key={header.key}>{header.label}</th>
+                            ))}
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {currentMedicines.length > 0 ? (
+                            currentMedicines.map((medicine, index) => {
+                                const isEditing = editingRowId === medicine._id;
+                                return (
+                                    <tr 
+                                        key={medicine._id} 
+                                        onClick={() => !isEditing && handleRowClick(medicine)}
+                                        style={{ cursor: isEditing ? 'default' : 'pointer' }}
+                                        className={isEditing ? 'table-warning' : ''}
+                                    >
+                                        <td onClick={(e) => e.stopPropagation()} className="text-center">
+                                            <input type="checkbox" className="form-check-input" onChange={() => handleSelectRow(medicine._id)} checked={selectedIds.includes(medicine._id)} />
+                                        </td>
+                                        <td>{index + 1}</td>
+                                        {visibleHeaders.map(header => (
+                                            <td key={header.key}>
+                                                {renderCellContent(medicine, header)}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                );
+                            })
+                        ) : (
+                            <tr>
+                                <td colSpan={visibleHeaders.length + 2} className="text-center py-4">
+                                    No medicines found.
+                                </td>
+                            </tr>
+                        )}
+                        </tbody>
+                    </table>
                 </div>
-              </div>
-            </form>
-          </div>
+            </div>
         </div>
       </div>
-      {/* FOR UPLOAD MEDITION EXCEL FILE End */}
 
-      <div className="container-fluid px-4 py-5">
-        <h1 className="display-5 fw-bold mb-4 text-center text-primary">Medicine</h1>
-        <div className="position-relative">
-          <div
-            ref={scrollContainerRef}
-            className="table-responsive custom-scrollbar"
-            style={{ maxHeight: '70vh', overflowY: 'auto' }}
-          >
-            <table className="table table-bordered table-striped align-middle">
-              <thead className="sticky-top">
-                <tr>
-                  <th className="table-header-custom" style={{ minWidth: "60px" }}>S.No</th>
-                  <th className="table-header-custom" style={{ minWidth: "80px" }}>ID</th>
-                  <th className="table-header-custom" style={{ minWidth: "150px" }}>Medicine Name</th>
-                  <th className="table-header-custom" style={{ minWidth: "120px" }}>Manufacturer</th>
-                  <th className="table-header-custom" style={{ minWidth: "180px" }}>Salt Composition</th>
-                  <th className="table-header-custom" style={{ minWidth: "100px" }}>MRP</th>
-                  <th className="table-header-custom" style={{ minWidth: "100px" }}>Best Price</th>
-                  <th className="table-header-custom" style={{ minWidth: "80px" }}>Discount %</th>
-                  <th className="table-header-custom" style={{ minWidth: "120px" }}>Prescription Required</th>
-                  <th className="table-header-custom" style={{ minWidth: "100px" }}>Packaging</th>
-                  <th className="table-header-custom" style={{ minWidth: "120px" }}>Expected Delivery</th>
-                  <th className="table-header-custom" style={{ minWidth: "80px" }}>Rating</th>
-                  <th className="table-header-custom" style={{ minWidth: "120px" }}>Bread Crumb</th>
-                  <th className="table-header-custom" style={{ minWidth: "100px" }}>Storage</th>
-                  <th className="table-header-custom" style={{ minWidth: "100px" }}>For Sale</th>
-                  <th className="table-header-custom" style={{ minWidth: "120px" }}>More Information</th>
-                  <th className="table-header-custom" style={{ minWidth: "120px" }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentMedicines.map((medicine, index) => (
-                  <tr key={medicine._id || index}>
-                    <td className="text-center fw-medium">{index + 1}</td>
-                    
-                    <td className="text-center">
-                      {isRowInEditMode(medicine._id) ? (
-                        <input
-                          type="text"
-                          value={medicine.Id || ''}
-                          onChange={(e) => handleInputChange(medicine._id, 'Id', e.target.value)}
-                          className="form-control shadow-none form-control shadow-none-sm text-center"
-                          style={{ minWidth: "80px" }}
-                        />
-                      ) : (
-                        medicine.Id || 'N/A'
-                      )}
-                    </td>
-
-                    <td className="text-center">
-                      {isRowInEditMode(medicine._id) ? (
-                        <input
-                          type="text"
-                          value={medicine.name || ''}
-                          onChange={(e) => handleInputChange(medicine._id, 'name', e.target.value)}
-                          className="form-control shadow-none form-control shadow-none-sm text-center"
-                          style={{ minWidth: "150px" }}
-                        />
-                      ) : (
-                        <span className="fw-medium text-primary">{medicine.name || 'N/A'}</span>
-                      )}
-                    </td>
-
-                    <td className="text-center">
-                      {isRowInEditMode(medicine._id) ? (
-                        <input
-                          type="text"
-                          value={medicine.manufacturers || ''}
-                          onChange={(e) => handleInputChange(medicine._id, 'manufacturers', e.target.value)}
-                          className="form-control shadow-none form-control shadow-none-sm text-center"
-                          style={{ minWidth: "120px" }}
-                        />
-                      ) : (
-                        medicine.manufacturers || 'N/A'
-                      )}
-                    </td>
-
-                    <td className="text-center">
-                      {isRowInEditMode(medicine._id) ? (
-                        <textarea
-                          value={medicine.salt_composition || ''}
-                          onChange={(e) => handleInputChange(medicine._id, 'salt_composition', e.target.value)}
-                          className="form-control shadow-none form-control shadow-none-sm text-center"
-                          style={{ minWidth: "180px", minHeight: "60px" }}
-                          rows="2"
-                        />
-                      ) : (
-                        <span className="text-muted small">{medicine.salt_composition || 'N/A'}</span>
-                      )}
-                    </td>
-
-                    <td className="text-center">
-                      {isRowInEditMode(medicine._id) ? (
-                        <input
-                          type="text"
-                          value={medicine.mrp || ''}
-                          onChange={(e) => handleInputChange(medicine._id, 'mrp', e.target.value)}
-                          className="form-control shadow-none form-control shadow-none-sm text-center"
-                          style={{ minWidth: "100px" }}
-                        />
-                      ) : (
-                        <span className="fw-medium">{medicine.mrp || 'N/A'}</span>
-                      )}
-                    </td>
-
-                    <td className="text-center">
-                      {isRowInEditMode(medicine._id) ? (
-                        <input
-                          type="text"
-                          value={medicine.best_price || ''}
-                          onChange={(e) => handleInputChange(medicine._id, 'best_price', e.target.value)}
-                          className="form-control shadow-none form-control shadow-none-sm text-center"
-                          style={{ minWidth: "100px" }}
-                        />
-                      ) : (
-                        <span className="fw-medium text-success">{medicine.best_price || 'N/A'}</span>
-                      )}
-                    </td>
-
-                    <td className="text-center">
-                      {isRowInEditMode(medicine._id) ? (
-                        <input
-                          type="text"
-                          value={medicine.discont_percent || ''}
-                          onChange={(e) => handleInputChange(medicine._id, 'discont_percent', e.target.value)}
-                          className="form-control shadow-none form-control shadow-none-sm text-center"
-                          style={{ minWidth: "80px" }}
-                        />
-                      ) : (
-                        <span className="badge bg-info">{medicine.discont_percent || '0%'}</span>
-                      )}
-                    </td>
-
-                    <td className="text-center">
-                      {isRowInEditMode(medicine._id) ? (
-                        <select
-                          value={medicine.prescription_required || 'NO'}
-                          onChange={(e) => handleInputChange(medicine._id, 'prescription_required', e.target.value)}
-                          className="form-control shadow-none form-control shadow-none-sm text-center"
-                          style={{ minWidth: "120px" }}
-                        >
-                          <option value="YES">YES</option>
-                          <option value="NO">NO</option>
-                        </select>
-                      ) : (
-                        <span className={`badge ${medicine.prescription_required === 'YES' ? 'bg-warning' : 'bg-success'}`}>
-                          {medicine.prescription_required || 'NO'}
-                        </span>
-                      )}
-                    </td>
-
-                    <td className="text-center">
-                      {isRowInEditMode(medicine._id) ? (
-                        <input
-                          type="text"
-                          value={medicine.packaging || ''}
-                          onChange={(e) => handleInputChange(medicine._id, 'packaging', e.target.value)}
-                          className="form-control shadow-none form-control shadow-none-sm text-center"
-                          style={{ minWidth: "100px" }}
-                        />
-                      ) : (
-                        medicine.packaging || 'N/A'
-                      )}
-                    </td>
-
-                    <td className="text-center">
-                      {isRowInEditMode(medicine._id) ? (
-                        <input
-                          type="text"
-                          value={medicine.expectedDelivery || ''}
-                          onChange={(e) => handleInputChange(medicine._id, 'expectedDelivery', e.target.value)}
-                          className="form-control shadow-none form-control shadow-none-sm text-center"
-                          style={{ minWidth: "120px" }}
-                        />
-                      ) : (
-                        <span className="badge bg-info">{medicine.expectedDelivery || 'N/A'}</span>
-                      )}
-                    </td>
-
-                    <td className="text-center">
-                      {isRowInEditMode(medicine._id) ? (
-                        <input
-                          type="number"
-                          value={medicine.rating || 0}
-                          onChange={(e) => handleInputChange(medicine._id, 'rating', e.target.value)}
-                          className="form-control shadow-none form-control shadow-none-sm text-center"
-                          style={{ minWidth: "80px" }}
-                          min="0"
-                          max="5"
-                          step="0.1"
-                        />
-                      ) : (
-                        <div>
-                          <span className="fw-medium">{medicine.rating || 0}</span>
-                          <div className="text-warning">
-                            {'★'.repeat(Math.floor(medicine.rating || 0))}
-                            {'☆'.repeat(5 - Math.floor(medicine.rating || 0))}
-                          </div>
+      {/* Details Modal */}
+      {showDetailModal && selectedMedicine && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '1200px', width: '90%' }}>
+            <div className="modal-header">
+              <h5 className="modal-title">{selectedMedicine.name || 'Medicine Details'}</h5>
+              <button type="button" className="btn-close" onClick={() => setShowDetailModal(false)}></button>
+            </div>
+            <div className="modal-body">
+              <div className="medicine-details">
+                <div className="row mb-4">
+                  <div className="col-12 d-flex justify-content-center">
+                    {Array.isArray(selectedMedicine.image_url) && selectedMedicine.image_url.length > 0 ? (
+                      <div id="medicineDetailsCarousel" className="carousel slide" data-bs-ride="carousel" style={{ maxHeight: '400px', maxWidth: '100%' }}>
+                        <div className="carousel-indicators">
+                          {selectedMedicine.image_url.map((_, index) => (
+                            <button key={index} type="button" data-bs-target="#medicineDetailsCarousel" data-bs-slide-to={index} className={index === 0 ? 'active' : ''} aria-current={index === 0 ? 'true' : 'false'} aria-label={`Slide ${index + 1}`}></button>
+                          ))}
                         </div>
-                      )}
-                    </td>
-
-                    <td className="text-center">
-                      {isRowInEditMode(medicine._id) ? (
-                        <input
-                          type="text"
-                          value={medicine.bread_crumb || ''}
-                          onChange={(e) => handleInputChange(medicine._id, 'bread_crumb', e.target.value)}
-                          className="form-control shadow-none form-control shadow-none-sm text-center"
-                          style={{ minWidth: "120px" }}
-                        />
-                      ) : (
-                        <span className="small text-muted">{medicine.bread_crumb || 'N/A'}</span>
-                      )}
-                    </td>
-
-                    <td className="text-center">
-                      {isRowInEditMode(medicine._id) ? (
-                        <input
-                          type="text"
-                          value={medicine.storage || ''}
-                          onChange={(e) => handleInputChange(medicine._id, 'storage', e.target.value)}
-                          className="form-control shadow-none form-control shadow-none-sm text-center"
-                          style={{ minWidth: "100px" }}
-                        />
-                      ) : (
-                        <span className="small">{medicine.storage || 'N/A'}</span>
-                      )}
-                    </td>
-
-                    <td className="text-center">
-                      <span className={`badge ${medicine.for_sale === 'FOR SALE' ? 'bg-success' : 'bg-danger'}`}>
-                        {medicine.for_sale || 'NOT FOR SALE'}
-                      </span>
-                    </td>
-
-                    <td className="text-center">
-                      <button
-                        className="btn btn-info btn-sm d-flex align-items-center text-white fw-semibold py-2 mx-auto"
-                        onClick={() => showDetails(medicine)}
-                        title="View Details"
-                      >
-                        See more...
-                      </button>
-                    </td>
-
-                    <td className="text-center">
-                      <div className="d-flex justify-content-center gap-1 flex-wrap">
-                        <button
-                          className="btn btn-success btn-sm d-flex align-items-center"
-                          onClick={handleExcelUpload}
-                          title="Upload"
-                        >
-                          <i className="fas fa-upload me-1"></i>
-                          Upload
-                        </button>
-                        <button
-                          className="btn btn-warning btn-sm d-flex align-items-center"
-                          onClick={() => handleEdit(medicine._id)}
-                          title={isRowInEditMode(medicine._id) ? 'Save Changes' : 'Edit Medicine'}
-                          disabled={isMedicineSaving(medicine._id)}
-                        >
-                          {isMedicineSaving(medicine._id) ? (
-                            <>
-                              <div className="spinner-border spinner-border-sm me-1" role="status">
-                                <span className="visually-hidden">Loading...</span>
-                              </div>
-                              Saving...
-                            </>
-                          ) : (
-                            <>
-                              <i className={`fas ${isRowInEditMode(medicine._id) ? 'fa-save' : 'fa-edit'} me-1`}></i>
-                              {isRowInEditMode(medicine._id) ? 'Save' : 'Edit'}
-                            </>
-                          )}
-                        </button>
+                        <div className="carousel-inner">
+                          {selectedMedicine.image_url.map((imgSrc, index) => (
+                            <div key={index} className={`carousel-item ${index === 0 ? 'active' : ''}`}>
+                              <img src={imgSrc} className="d-block w-100" alt={`${selectedMedicine.name} slide ${index + 1}`} style={{ maxHeight: '400px', objectFit: 'contain' }} onError={handleImageError} />
+                            </div>
+                          ))}
+                        </div>
+                        {selectedMedicine.image_url.length > 1 && (
+                          <>
+                            <button className="carousel-control-prev" type="button" data-bs-target="#medicineDetailsCarousel" data-bs-slide="prev"><span className="carousel-control-prev-icon" aria-hidden="true"></span><span className="visually-hidden">Previous</span></button>
+                            <button className="carousel-control-next" type="button" data-bs-target="#medicineDetailsCarousel" data-bs-slide="next"><span className="carousel-control-next-icon" aria-hidden="true"></span><span className="visually-hidden">Next</span></button>
+                          </>
+                        )}
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Toggle button in scroll track */}
-          {showScrollToggle && (
-            <button
-              className="btn btn-light btn-sm position-absolute scroll-toggle-btn"
-              onClick={toggleFullView}
-              title={isExpanded ? "Show start" : "Show all"}
-              style={{ bottom: '20px', right: '20px', zIndex: 10 }}
-            >
-              <i className={`fas ${isExpanded ? 'fa-angle-double-left' : 'fa-angle-double-right'}`}></i>
-            </button>
-          )}
-        </div>
-
-        {/* Detail Modal */}
-        {showDetailModal && selectedMedicine && (
-          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-            <div className="modal-dialog modal-xl">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title">
-                    <i className="fas fa-pills me-2"></i>
-                    {selectedMedicine.name} - Detailed Information
-                  </h5>
-                  <button
-                    type="button"
-                    className="btn-close"
-                    onClick={() => setShowDetailModal(false)}
-                  ></button>
+                    ) : (
+                      <img src={dummyImages[0]} alt={selectedMedicine.name} className="img-fluid" style={{ maxHeight: '400px', objectFit: 'contain' }} onError={handleImageError} />
+                    )}
+                  </div>
                 </div>
-                <div className="modal-body">
-                  <div className="row">
-                    <div className="col-md-6">
-                      <div className="card h-100">
-                        <div className="card-header">
-                          <h6 className="mb-0">Basic Information</h6>
-                        </div>
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <div className="card h-100">
                         <div className="card-body">
-                          <p><strong>Medicine ID:</strong> {selectedMedicine.Id}</p>
-                          <p><strong>Name:</strong> {selectedMedicine.name}</p>
-                          <p><strong>Manufacturer:</strong> {selectedMedicine.manufacturers}</p>
-                          <p><strong>Salt Composition:</strong> {selectedMedicine.salt_composition}</p>
-                          <p className=''><strong>Primary Use:</strong> <span className="badge   p-0 pt-1 text-start text-wrap text-muted fw-medium">{selectedMedicine.primary_use || 'N/A'}</span></p>
-                          <p><strong>Packaging:</strong> {selectedMedicine.packaging || 'N/A'}</p>
-                          <p><strong>Storage:</strong> {selectedMedicine.storage}</p>
+                            <h5 className="card-title text-primary">Description</h5><p className="card-text">{selectedMedicine.description || 'N/A'}</p>
+                            <h5 className="card-title text-primary mt-4">Introduction</h5><p className="card-text">{selectedMedicine.introduction || 'N/A'}</p>
+                            <h5 className="card-title text-primary mt-4">How It Works</h5><p className="card-text">{selectedMedicine.how_works || 'N/A'}</p>
+                            <h5 className="card-title text-primary mt-4">Benefits</h5><p className="card-text">{selectedMedicine.benefits || 'N/A'}</p>
                         </div>
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="card h-100">
-                        <div className="card-header">
-                          <h6 className="mb-0">Pricing & Availability</h6>
-                        </div>
-                        <div className="card-body">
-                          <p><strong>MRP:</strong> {selectedMedicine.mrp || 'N/A'}</p>
-                          <p><strong>Best Price:</strong> {selectedMedicine.best_price || 'N/A'}</p>
-                          <p><strong>Discount:</strong> {selectedMedicine.discont_percent || '0%'}</p>
-                          <p><strong>Expected Delivery:</strong> {selectedMedicine.expectedDelivery}</p>
-                          <p><strong>Rating:</strong> {selectedMedicine.rating || 0}/5</p>
-                          <p><strong>Prescription Required:</strong> 
-                            <span className={`badge ms-2 ${selectedMedicine.prescription_required === 'YES' ? 'bg-warning' : 'bg-success'}`}>
-                              {selectedMedicine.prescription_required}
-                            </span>
-                          </p>
-                          <p><strong>For Sale:</strong> 
-                            <span className={`badge ms-2 ${selectedMedicine.for_sale === 'FOR SALE' ? 'bg-success' : 'bg-danger'}`}>
-                              {selectedMedicine.for_sale}
-                            </span>
-                          </p>
-                        </div>
-                      </div>
                     </div>
                   </div>
-                  
-                  <div className="row mt-3">
-                    <div className="col-12">
-                      <div className="card">
-                        <div className="card-header">
-                          <h6 className="mb-0">Description & Usage</h6>
-                        </div>
+                  <div className="col-md-6 mb-3">
+                    <div className="card h-100">
                         <div className="card-body">
-                          <p><strong>Introduction:</strong></p>
-                          <p className="text-muted">{selectedMedicine.introduction}</p>
-                          
-                          <p><strong>How to Use:</strong></p>
-                          <p className="text-muted">{selectedMedicine.how_to_use}</p>
-                          
-                          <p><strong>How it Works:</strong></p>
-                          <p className="text-muted">{selectedMedicine.how_works}</p>
+                            <h5 className="card-title text-primary">Storage</h5><p className="card-text">{selectedMedicine.storage || 'N/A'}</p>
+                            <h5 className="card-title text-primary mt-4">Usage</h5><p className="card-text">{selectedMedicine.use_of || 'N/A'}</p>
+                            <h5 className="card-title text-primary mt-4">How To Use</h5><p className="card-text">{selectedMedicine.how_to_use || 'N/A'}</p>
+                            <h5 className="card-title text-primary mt-4">Side Effects</h5><p className="card-text">{selectedMedicine.side_effect || 'N/A'}</p>
+                            <h5 className="card-title text-primary mt-4">Safety Advice</h5><p className="card-text">{selectedMedicine.safety_advise || 'N/A'}</p>
                         </div>
-                      </div>
                     </div>
                   </div>
-
-                  <div className="row mt-3">
-                    <div className="col-md-6">
-                      <div className="card h-100">
-                        <div className="card-header">
-                          <h6 className="mb-0">Side Effects</h6>
-                        </div>
-                        <div className="card-body text-wrap">
-                          <div className="">
-                        <p className=''> {formatSideEffects(selectedMedicine.side_effect)}</p>
-                          </div>
-                        
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="card h-100">
-                        <div className="card-header">
-                          <h6 className="mb-0">Safety Advice</h6>
-                        </div>
-                        <div className="card-body">
-                          {formatSafetyAdvice(selectedMedicine.safety_advise)}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {selectedMedicine.alternate_brand && (
-                    <div className="row mt-3">
-                      <div className="col-12">
-                        <div className="card">
-                          <div className="card-header">
-                            <h6 className="mb-0">Alternative Brands</h6>
-                          </div>
-                          <div className="card-body">
-                            <p className="text-muted small">{selectedMedicine.alternate_brand}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div className="modal-footer">
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={() => setShowDetailModal(false)}
-                  >
-                    Close
-                  </button>
-                  {selectedMedicine.url && (
-                    <a
-                      href={selectedMedicine.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn btn-primary"
-                    >
-                      <i className="fas fa-external-link-alt me-1"></i>
-                      View on 1mg
-                    </a>
-                  )}
                 </div>
               </div>
             </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-secondary" onClick={() => setShowDetailModal(false)}>Close</button>
+              {selectedMedicine.url && <a href={selectedMedicine.url} target="_blank" rel="noopener noreferrer" className="btn btn-primary">View Source</a>}
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </>
   );
 }

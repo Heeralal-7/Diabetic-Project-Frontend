@@ -1,0 +1,174 @@
+/* Timeline styles */
+.timeline-container {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  padding: 20px 0;
+}
+
+.timeline-container::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #dee2e6;
+  transform: translateY(-50%);
+  z-index: 1;
+}
+
+.timeline-step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 2;
+  flex: 1;
+}
+
+.timeline-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #dee2e6;
+  color: #6c757d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+  font-size: 18px;
+}
+
+.timeline-step.active .timeline-icon {
+  background-color: #0d6efd;
+  color: white;
+}
+
+.timeline-step.current .timeline-icon {
+  background-color: #198754;
+  color: white;
+}
+
+.timeline-label {
+  text-align: center;
+  font-size: 14px;
+  color: #6c757d;
+  max-width: 100px;
+}
+
+.timeline-step.active .timeline-label {
+  color: #0d6efd;
+  font-weight: 500;
+}
+
+.timeline-step.current .timeline-label {
+  color: #198754;
+  font-weight: 600;
+}
+
+.timeline-date {
+  font-size: 12px;
+  color: #6c757d;
+  margin-top: 4px;
+}
+
+/* Horizontal timeline for tracker */
+.timeline-horizontal {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  padding: 20px 0 40px;
+}
+
+.timeline-horizontal::before {
+  content: '';
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background-color: #dee2e6;
+  z-index: 1;
+}
+
+.timeline-horizontal .timeline-step {
+  flex: 1;
+  position: relative;
+}
+
+.timeline-horizontal .timeline-icon {
+  width: 44px;
+  height: 44px;
+  margin-bottom: 12px;
+  z-index: 2;
+}
+
+.timeline-horizontal .timeline-step.active::before {
+  content: '';
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background-color: #0d6efd;
+  z-index: 1;
+}
+
+.timeline-horizontal .timeline-step.current::before {
+  background-color: #198754;
+}
+
+/* Order item image */
+.order-item-image {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .timeline-container, .timeline-horizontal {
+    flex-direction: column;
+    align-items: flex-start;
+    padding-left: 30px;
+  }
+
+  .timeline-container::before, 
+  .timeline-horizontal::before {
+    top: 0;
+    bottom: 0;
+    left: 15px;
+    right: auto;
+    width: 2px;
+    height: auto;
+    transform: none;
+  }
+
+  .timeline-step {
+    flex-direction: row;
+    margin-bottom: 20px;
+    width: 100%;
+    align-items: center;
+  }
+
+  .timeline-icon {
+    margin-right: 15px;
+    margin-bottom: 0;
+  }
+
+  .timeline-label {
+    text-align: left;
+    max-width: none;
+  }
+
+  .timeline-horizontal .timeline-step.active::before {
+    top: 0;
+    bottom: 0;
+    left: 22px;
+    right: auto;
+    width: 4px;
+    height: auto;
+  }
+}

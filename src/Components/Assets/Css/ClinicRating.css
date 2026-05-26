@@ -1,0 +1,101 @@
+/* Clinic Rating Unique CSS */
+.cl-rating-wrapper {
+    background: #fff;
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    margin: 3rem 0;
+    overflow: hidden;
+    border: 1px solid #eee;
+  }
+ 
+  .cl-rating-header {
+    background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 15px 15px 0 0;
+  }
+ 
+  .cl-rating-body {
+    padding: 2rem;
+  }
+ 
+  .cl-rating-summary {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    border: 1px solid #e9ecef;
+  }
+ 
+  .cl-rating-avg {
+    font-size: 3.5rem;
+    font-weight: 800;
+    color: #0d6efd;
+    line-height: 1;
+  }
+ 
+  .cl-distribution-bar-bg {
+    background: #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+    height: 8px;
+    width: 100%;
+  }
+ 
+  .cl-distribution-fill {
+    background: #ffc107;
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.3s ease;
+  }
+ 
+  .cl-feedback-item {
+    border-bottom: 1px solid #eee;
+    padding: 1.5rem 0;
+  }
+ 
+  .cl-feedback-item:last-child {
+    border-bottom: none;
+  }
+ 
+  .cl-avatar {
+    width: 45px;
+    height: 45px;
+    background: linear-gradient(45deg, #0d6efd, #0dcaf0);
+    color: white;
+    font-weight: bold;
+    font-size: 1.2rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+ 
+  /* Star Input Styles */
+  .cl-star-input-wrapper {
+    display: flex;
+    gap: 2px;
+    margin: 10px 0;
+  }
+  .cl-star-cursor {
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .cl-star-cursor:hover {
+    transform: scale(1.1);
+  }
+ 
+  .cl-add-form {
+    border: 1px solid #dee2e6;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    overflow: hidden;
+  }
+  .cl-add-form-header {
+    background: #f8f9fa;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #dee2e6;
+    font-weight: bold;
+  }
+ 

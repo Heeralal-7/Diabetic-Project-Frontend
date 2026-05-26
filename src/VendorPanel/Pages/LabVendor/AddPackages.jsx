@@ -7,13 +7,14 @@ const AddPackages = () => {
   const [packageName, setPackageName] = useState("");
   const [description, setDescription] = useState("");
   const [precautions, setPrecautions] = useState("");
-  const [testType, setTestType] = useState("");
-  const [sampleRequired, setSampleRequired] = useState("");
+  const [testType, setTestType] = useState([]); // Changed to array for multiple selections
+  const [sampleRequired, setSampleRequired] = useState([]); // Already an array, but good to confirm
   const [otherSampleRequired, setOtherSampleRequired] = useState("");
-  const [sampleCollectedIn, setSampleCollectedIn] = useState("");
-  const [otherSampleCollectedIn, setOtherSampleCollectedIn] = useState("");
+  const [sampleCollected, setSampleCollected] = useState([]); // Renamed from sampleCollectedIn to match schema
+  const [otherSampleCollected, setOtherSampleCollected] = useState(""); // Renamed from otherSampleCollectedIn
   const [amount, setAmount] = useState("");
   const [discountPercentage, setDiscountPercentage] = useState("");
+  const [method, setMethod] = useState(""); // New state for method
   const [selectedTests, setSelectedTests] = useState([]);
   const [showTestSelection, setShowTestSelection] = useState(false);
   const [tempSelectedTests, setTempSelectedTests] = useState([]);
@@ -37,44 +38,73 @@ const AddPackages = () => {
   };
 
   useEffect(() => {
+    // Fetch tests for the initial active category
     getTestNames(activeCategory);
   }, [activeCategory]);
 
+  // Calculate discounted amount whenever amount or discountPercentage changes
+  const calculateDiscountedAmount = () => {
+    const baseAmount = parseFloat(amount);
+    const discount = parseFloat(discountPercentage);
+
+    if (!isNaN(baseAmount) && !isNaN(discount) && discount >= 0 && discount <= 100) {
+      const discounted = baseAmount - (baseAmount * discount) / 100;
+      return discounted.toFixed(2); // Format to 2 decimal places
+    }
+    return amount; // Return original amount if calculation is not possible
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    // Prepare sampleRequired array: include "Others" value if selected
+    const finalSampleRequired = sampleRequired.includes("Others")
+      ? [...sampleRequired.filter(s => s !== "Others"), otherSampleRequired]
+      : sampleRequired;
+
+    // Prepare sampleCollected array: include "Others" value if selected
+    const finalSampleCollected = sampleCollected.includes("Others")
+      ? [...sampleCollected.filter(s => s !== "Others"), otherSampleCollected]
+      : sampleCollected;
+    
+    const discountedAmount = calculateDiscountedAmount();
 
     const formData = {
       packageName,
       description,
       precautions,
-      testType,
-      sampleRequired:
-        sampleRequired === "Others" ? otherSampleRequired : sampleRequired,
-      sampleCollected:
-        sampleCollectedIn === "Others"
-          ? otherSampleCollectedIn
-          : sampleCollectedIn,
-      addTest: selectedTests,
+      testType, // testType is now an array
+      sampleRequired: finalSampleRequired,
+      sampleCollected: finalSampleCollected,
+      addTest: selectedTests.map(test => test._id), // Assuming selectedTests contains objects with _id
       amount,
+      method, // Added method
       discountPercentage,
+      discountedAmount, // Added discounted amount
+      status: "0", // Default status for new packages
     };
 
     dispatch(createpackages(formData))
       .then(() => {
+        // Reset form fields
         setPackageName("");
         setDescription("");
         setPrecautions("");
-        setTestType("");
+        setTestType([]);
         setSampleRequired([]);
-        setSampleCollectedIn([]);
+        setSampleCollected([]);
         setOtherSampleRequired("");
-        setOtherSampleCollectedIn("");
+        setOtherSampleCollected("");
         setSelectedTests([]);
         setAmount("");
         setDiscountPercentage("");
+        setMethod("");
+        // Close test selection if open
+        setShowTestSelection(false);
+        setTempSelectedTests([]);
       })
       .catch((error) => {
-        console.error("Error creating test:", error);
+        console.error("Error creating package:", error);
       });
   };
 
@@ -88,6 +118,28 @@ const AddPackages = () => {
     setSelectedTests(tempSelectedTests);
     setShowTestSelection(false);
   };
+
+  const handleTestTypeChange = (e) => {
+    const { value, checked } = e.target;
+    setTestType((prev) =>
+      checked ? [...prev, value] : prev.filter((type) => type !== value)
+    );
+  };
+
+  const handleSampleRequiredChange = (e) => {
+    const { value, checked } = e.target;
+    setSampleRequired((prev) =>
+      checked ? [...prev, value] : prev.filter((sample) => sample !== value)
+    );
+  };
+
+  const handleSampleCollectedChange = (e) => {
+    const { value, checked } = e.target;
+    setSampleCollected((prev) =>
+      checked ? [...prev, value] : prev.filter((vial) => vial !== value)
+    );
+  };
+
 
   return (
     <div className="container-fluid mt-4">
@@ -134,19 +186,19 @@ const AddPackages = () => {
               ></textarea>
             </div>
 
-            {/* Test Type */}
+            {/* Test Type - Now uses checkboxes to match [String] array */}
             <div className="mb-3">
               <label className="form-label">Test Type</label>
               <div className="d-flex gap-3">
                 <div className="form-check">
                   <input
                     className="form-check-input"
-                    type="radio"
+                    type="checkbox"
                     name="testType"
                     id="walkIn"
                     value="Walk In"
-                    checked={testType === "Walk In"}
-                    onChange={(e) => setTestType(e.target.value)}
+                    checked={testType.includes("Walk In")}
+                    onChange={handleTestTypeChange}
                   />
                   <label className="form-check-label" htmlFor="walkIn">
                     Walk In
@@ -155,12 +207,12 @@ const AddPackages = () => {
                 <div className="form-check">
                   <input
                     className="form-check-input"
-                    type="radio"
+                    type="checkbox"
                     name="testType"
                     id="homeCollection"
                     value="Home Collection"
-                    checked={testType === "Home Collection"}
-                    onChange={(e) => setTestType(e.target.value)}
+                    checked={testType.includes("Home Collection")}
+                    onChange={handleTestTypeChange}
                   />
                   <label className="form-check-label" htmlFor="homeCollection">
                     Home Collection
@@ -169,12 +221,12 @@ const AddPackages = () => {
                 <div className="form-check">
                   <input
                     className="form-check-input"
-                    type="radio"
+                    type="checkbox"
                     name="testType"
                     id="both"
                     value="Both"
-                    checked={testType === "Both"}
-                    onChange={(e) => setTestType(e.target.value)}
+                    checked={testType.includes("Both")}
+                    onChange={handleTestTypeChange}
                   />
                   <label className="form-check-label" htmlFor="both">
                     Both
@@ -193,18 +245,7 @@ const AddPackages = () => {
                       className="form-check-input"
                       type="checkbox"
                       value={sample}
-                      onChange={(e) => {
-                        const selected = [...sampleRequired];
-                        if (selected.includes(e.target.value)) {
-                          // Remove item if it's already selected
-                          setSampleRequired(
-                            selected.filter((s) => s !== e.target.value)
-                          );
-                        } else {
-                          // Add item if it's not selected
-                          setSampleRequired([...selected, e.target.value]);
-                        }
-                      }}
+                      onChange={handleSampleRequiredChange}
                       checked={sampleRequired.includes(sample)}
                     />
                     <label className="form-check-label">{sample}</label>
@@ -218,7 +259,7 @@ const AddPackages = () => {
                   <input
                     type="text"
                     className="form-control"
-                    placeholder="Please specify"
+                    placeholder="Please specify other sample"
                     value={otherSampleRequired}
                     onChange={(e) => setOtherSampleRequired(e.target.value)}
                     required
@@ -238,19 +279,8 @@ const AddPackages = () => {
                         className="form-check-input"
                         type="checkbox"
                         value={vial}
-                        onChange={(e) => {
-                          const selected = [...sampleCollectedIn];
-                          if (selected.includes(e.target.value)) {
-                            // Remove item from the array if it's already selected
-                            setSampleCollectedIn(
-                              selected.filter((v) => v !== e.target.value)
-                            );
-                          } else {
-                            // Add item to the array if it's not already selected
-                            setSampleCollectedIn([...selected, e.target.value]);
-                          }
-                        }}
-                        checked={sampleCollectedIn.includes(vial)}
+                        onChange={handleSampleCollectedChange}
+                        checked={sampleCollected.includes(vial)}
                       />
                       <label className="form-check-label">{vial}</label>
                     </div>
@@ -259,18 +289,31 @@ const AddPackages = () => {
               </div>
 
               {/* Conditional input for "Others" */}
-              {sampleCollectedIn.includes("Others") && (
+              {sampleCollected.includes("Others") && (
                 <div className="mt-2">
                   <input
                     type="text"
                     className="form-control"
-                    placeholder="Please specify"
-                    value={otherSampleCollectedIn}
-                    onChange={(e) => setOtherSampleCollectedIn(e.target.value)}
+                    placeholder="Please specify other collection method"
+                    value={otherSampleCollected}
+                    onChange={(e) => setOtherSampleCollected(e.target.value)}
                     required
                   />
                 </div>
               )}
+            </div>
+
+            {/* Method */}
+            <div className="mb-3">
+              <label className="form-label">Method</label>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Enter Method (e.g., ELISA, PCR)"
+                value={method}
+                onChange={(e) => setMethod(e.target.value)}
+                required
+              />
             </div>
 
             {/* Add Tests */}
@@ -289,6 +332,7 @@ const AddPackages = () => {
                     type="button"
                     className="btn btn-outline-danger btn-sm"
                     onClick={() => {
+                      // Pre-populate tempSelectedTests with current selected tests
                       setTempSelectedTests(selectedTests);
                       setShowTestSelection(true);
                     }}
@@ -301,7 +345,7 @@ const AddPackages = () => {
                   type="button"
                   className="btn btn-outline-danger btn-sm d-block"
                   onClick={() => {
-                    setTempSelectedTests(selectedTests);
+                    setTempSelectedTests([]); // Clear temp selections if no tests are added yet
                     setShowTestSelection(true);
                   }}
                 >
@@ -310,7 +354,7 @@ const AddPackages = () => {
               )}
 
               {showTestSelection && (
-                <div className="card p-3 mb-3">
+                <div className="card p-3 mt-3">
                   <h4>Select Tests</h4>
                   <div className="mb-3">
                     <button
@@ -321,7 +365,8 @@ const AddPackages = () => {
                       } me-2`}
                       onClick={() => {
                         setActiveCategory("Pathology");
-                        getTestNames("Pathology");
+                        // Fetch tests if not already in testsData
+                        if (!testsData["Pathology"]) getTestNames("Pathology");
                       }}
                       type="button"
                     >
@@ -335,7 +380,8 @@ const AddPackages = () => {
                       }`}
                       onClick={() => {
                         setActiveCategory("Radiology");
-                        getTestNames("Radiology");
+                         // Fetch tests if not already in testsData
+                        if (!testsData["Radiology"]) getTestNames("Radiology");
                       }}
                       type="button"
                     >
@@ -349,8 +395,8 @@ const AddPackages = () => {
                         <input
                           className="form-check-input me-1"
                           type="checkbox"
-                          value={test}
-                          checked={tempSelectedTests.includes(test)}
+                          value={test._id} // Assuming test object has an _id
+                          checked={tempSelectedTests.some(t => t._id === test._id)}
                           onChange={() => toggleTestSelection(test)}
                         />
                         {test.name}
@@ -388,12 +434,28 @@ const AddPackages = () => {
               <input
                 type="number"
                 className="form-control"
-                placeholder="Enter Discount Percentage"
+                placeholder="Enter Discount Percentage (0-100)"
                 value={discountPercentage}
                 onChange={(e) => setDiscountPercentage(e.target.value)}
+                min="0"
+                max="100"
                 required
               />
             </div>
+            
+            {/* Display Discounted Amount */}
+            {amount && discountPercentage && (
+              <div className="mb-3">
+                <label className="form-label">Discounted Amount</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={`₹${calculateDiscountedAmount()}`}
+                  readOnly
+                  disabled
+                />
+              </div>
+            )}
 
             <button type="submit" className="btn btn-primary">
               Submit Package

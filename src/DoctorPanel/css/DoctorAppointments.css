@@ -1,0 +1,133 @@
+/* Call/Chat Interface Styles */
+.call-chat-interface {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 20px;
+  min-height: 500px;
+}
+
+.call-header {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+}
+
+/* Table Styles */
+/* --- MODIFICATION START: Making buttons fit compactly --- */
+.call-chat-buttons,
+.management-buttons {
+  display: flex;
+  flex-wrap: wrap; /* Allow buttons to wrap to the next line */
+  gap: 3px;        /* Reduce gap between buttons */
+  justify-content: center; /* Center buttons within the cell */
+}
+
+/* Ensure buttons take up appropriate width for 2-column layout */
+.call-chat-buttons .btn,
+.management-buttons .btn {
+  flex-basis: calc(50% - 3px); /* 50% width minus half the gap */
+  max-width: 50%;
+  margin: 0 !important; /* Remove any default margins */
+  padding: 0.3rem 0.2rem; /* Reduce padding to make buttons smaller */
+  font-size: 0.7rem; /* Reduce font size */
+  text-align: center;
+}
+
+/* Special adjustment for 3-button columns (Call/Chat) to fit better */
+.call-chat-buttons {
+    flex-direction: row; 
+    max-width: 150px; /* Optional: Limit width if desired */
+}
+
+/* Special adjustment for 5-button columns (Actions) */
+.management-buttons {
+    flex-direction: row;
+    max-width: 150px; /* Optional: Limit width if desired */
+}
+
+/* Ensure Action buttons line up nicely */
+.management-buttons .btn:nth-child(5) { /* Prescribe button (5th child) */
+    flex-basis: 100%; /* Make the last button take full width for better alignment */
+    max-width: 100%;
+}
+
+/* --- MODIFICATION END --- */
+
+.problem-description {
+  max-width: 200px;
+  word-wrap: break-word;
+}
+
+.clickable-row {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.clickable-row:hover {
+  background-color: #f8f9fa !important;
+}
+
+/* Button Styles */
+.btn-sm {
+  /* This is already set globally, but reducing padding/font in the specific button groups above */
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  /* Keep the new compact layout for small screens too, but adjust general button styles */
+  .call-chat-buttons .btn,
+  .management-buttons .btn {
+    flex-basis: calc(33.33% - 4px); /* For very small screens, make it 3 buttons per row */
+    max-width: 33.33%;
+    font-size: 0.65rem;
+  }
+  
+  .management-buttons .btn:nth-child(5) {
+      flex-basis: calc(33.33% - 4px);
+      max-width: 33.33%;
+  }
+}
+
+/* Badge Styles */
+.badge {
+  font-size: 0.7em;
+}
+
+/* Modal Styles */
+.modal-header-custom {
+  background: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.modal-body-custom {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.modal-footer-custom {
+  background: #f8f9fa;
+  border-top: 1px solid #dee2e6;
+}
+
+/* Appointment Details Styles */
+.appointment-details-content section {
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+}
+
+.appointment-details-content section:last-child {
+  border-bottom: none;
+}
+
+.appointment-details-content h4 {
+  color: #495057;
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.appointment-details-content strong {
+  color: #495057;
+  min-width: 120px;
+  display: inline-block;
+}

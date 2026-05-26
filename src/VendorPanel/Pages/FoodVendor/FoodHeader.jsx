@@ -1,27 +1,37 @@
 import React, { useContext, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "../../../Components/Assets/img/Logo.png";
-import { MyContext } from "../../../Context/Context";
 import { toast } from "react-toastify";
+import defaultAvatar from "../../../Components/Assets/img/FoodAndNutrition/Categorie.png"; // एक डिफ़ॉल्ट अवतार इमेज का उपयोग करें
 
+// 1. MyContext को इम्पोर्ट करें
+import { MyContext } from "../../../Context/Context";
 
 const FoodHeader = () => {
-    const { getAdmin, admin } = useContext(MyContext);
-    const URL = process.env.REACT_APP_API_URL;
+    // 2. कॉन्टेक्स्ट से वेंडर प्रोफ़ाइल डेटा और फ़ंक्शन प्राप्त करें
+    const { vendorProfile, getVendorProfile } = useContext(MyContext);
     const navigate = useNavigate();
-  
-    const handleLogout = () => {
-      sessionStorage.removeItem("foodtoken");
-      sessionStorage.removeItem("admin");
-      toast.success("Logged out successfully");
-      setTimeout(() => {
-        navigate("/vendordashboard");
-      }, 800);
-    };
-  
+    
+    // API बेस URL को .env फ़ाइल से प्राप्त करें
+    const URL = process.env.REACT_APP_API_URL || 'YOUR_API_BASE_URL';
+
+    // 3. कंपोनेंट लोड होने पर वेंडर की प्रोफ़ाइल फ़ेच करें
     useEffect(() => {
-      getAdmin();
-    }, []);
+        // यदि प्रोफ़ाइल पहले से लोड नहीं है, तो उसे फ़ेच करें
+        if (!vendorProfile) {
+            getVendorProfile();
+        }
+    }, [getVendorProfile, vendorProfile]); // डिपेंडेंसी जोड़ें
+
+    const handleLogout = () => {
+        // संबंधित टोकन को सेशन स्टोरेज से हटा दें
+        sessionStorage.removeItem("foodtoken");
+        sessionStorage.removeItem("foodVendorId");
+        toast.success("Logged out successfully");
+        setTimeout(() => {
+            navigate("/vendordashboard"); // वेंडर डैशबोर्ड या लॉगिन पेज पर रीडायरेक्ट करें
+        }, 800);
+    };
   
     return (
       <div className="header">
@@ -48,7 +58,7 @@ const FoodHeader = () => {
   
             <ul className="navbar-nav navbar-right-wrap ms-lg-auto d-flex nav-top-wrap align-items-center ms-4 ms-lg-0">
               {/* Theme switch */}
-              <li>
+              {/* <li>
                 <div className="form-check form-switch theme-switch btn btn-ghost btn-icon rounded-circle border-0 mb-0">
                   <input
                     className="form-check-input"
@@ -57,10 +67,10 @@ const FoodHeader = () => {
                     id="flexSwitchCheckDefault"
                   />
                 </div>
-              </li>
+              </li> */}
   
-              {/* Notification Bell */}
-              <li className="dropdown stopevent ms-2">
+              {/* Notification Bell (इस कोड में कोई बदलाव नहीं किया गया है) */}
+              {/* <li className="dropdown stopevent ms-2">
                 <Link
                   to="#"
                   className="btn btn-ghost btn-icon rounded-circle border-0"
@@ -110,48 +120,52 @@ const FoodHeader = () => {
                           <p className="mb-0">New update available...</p>
                         </Link>
                       </li>
-                      {/* Add more items as needed */}
                     </ul>
                   </div>
                   <div className="border-top text-center py-2">
                     <Link to="#">View all Notifications</Link>
                   </div>
                 </div>
-              </li>
+              </li> */}
   
               {/* User Dropdown */}
-              <li className="dropdown ms-2">
+              <li className="dropdown-li ms-2">
                 <Link
-                  to="#"
-                  className="rounded-circle"
-                  data-bs-toggle="dropdown"
-                  aria-expanded="false"
+                    to="#" 
+                    className="dropdown-toggle d-flex align-items-center text-dark text-decoration-none" 
+                    data-bs-toggle="dropdown" 
+                    aria-expanded="false"
                 >
+                  <h5 className="mb-0 me-2">{vendorProfile?.name || "Vendor Name"}</h5>
+
                   <div className="avatar avatar-md avatar-indicators avatar-online">
+                    {/* 4. वेंडर की इमेज दिखाएँ या डिफ़ॉल्ट इमेज दिखाएँ */}
                     <img
-                      src={`${URL}/${admin?.image}`}
-                      alt="admin"
+                      src={vendorProfile?.image ? `${URL}/${vendorProfile.image}` : defaultAvatar}
+                      alt={vendorProfile?.name || "admin"}
                       className="rounded-circle"
-                      style={{ width: "40px", height: "40px" }}
+                      style={{ width: "40px", height: "40px", objectFit: 'cover' }}
                     />
                   </div>
                 </Link>
                 <div className="dropdown-menu dropdown-menu-end" style={{ minWidth: "200px" }}>
                   <div className="px-4 pt-2 pb-0">
-                    <h5 className="mb-1">{admin?.name || "Pharmacy Admin"}</h5>
-                    <Link to="#" className="text-inherit fs-6">View my profile</Link>
+                    {/* 5. वेंडर का नाम दिखाएँ */}
+                    <h5 className="mb-1">{vendorProfile?.name || "Food Admin"}</h5>
+                    <Link to="/food-dashboard/edit-profile" className="text-inherit fs-6">View my profile</Link>
                     <div className="dropdown-divider mt-3 mb-2" />
                   </div>
                   <ul className="list-unstyled mb-0">
+                    {/* 6. रूट्स को food-dashboard के अनुसार बदलें */}
+                    {/* <li>
+                      <Link to="/food-dashboard/edit-profile" className="dropdown-item">Edit Profile</Link>
+                    </li> */}
                     <li>
-                      <Link to="/pharmacy-dashboard/edit" className="dropdown-item">Edit Profile</Link>
+                      <Link to="/food-dashboard/password" className="dropdown-item">Change Password</Link>
                     </li>
-                    <li>
-                      <Link to="/pharmacy-dashboard/password" className="dropdown-item">Change Password</Link>
-                    </li>
-                    <li>
+                    {/* <li>
                       <Link to="#" className="dropdown-item">Activity Log</Link>
-                    </li>
+                    </li> */}
                     <li>
                       <button onClick={handleLogout} className="dropdown-item text-danger">Logout Food</button>
                     </li>
@@ -165,4 +179,4 @@ const FoodHeader = () => {
     );
   };
   
-  export default FoodHeader ;
+  export default FoodHeader;

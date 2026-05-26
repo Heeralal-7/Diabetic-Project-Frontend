@@ -1,325 +1,258 @@
-import { useState, useContext, useEffect } from 'react';
-import { MyContext } from "../../../../Context/Context";
-import { toast } from "react-toastify";
- 
- 
-export default function UploadFood() {
-  const {
-    addCategory,
-    addMeal
- 
-  } = useContext(MyContext);
- 
-  const [meal, setMeal] = useState('');
-  const [category, setCategory] = useState('');
-  const [subCategory, setSubCategory] = useState('');
-  const [mealImage, setMealImage] = useState(null);
-  const [mealImagePreview, setMealImagePreview] = useState(null);
-  const [categoryImage, setCategoryImage] = useState(null);
-  const [subCategoryImage, setSubCategoryImage] = useState(null);
-  const [loading, setLoading] = useState({
-    meal: false,
-    category: false,
-    subCategory: false
-  });
- 
-  // Cleanup function for image preview URLs
-  useEffect(() => {
-    return () => {
-      if (mealImagePreview) {
-        URL.revokeObjectURL(mealImagePreview);
-      }
+import React, { useState, useEffect, useContext } from 'react';
+import { MyContext } from '../../../../Context/Context';
+import { Form, Button, Row, Col, Spinner, Alert, Tabs, Tab } from 'react-bootstrap';
+import { toast } from 'react-toastify';
+
+// Initial state for the category form for easy reset
+const initialCategoryState = {
+    selectedType: '',
+    customTypeName: '',
+    subCategory: '',
+    calorie: '',
+};
+
+const UploadFood = ({ onMealAdded, onCategoryAdded }) => {
+    const { addMeal1, createCategory, getFoodCategories } = useContext(MyContext);
+
+    // ======== STATE FOR ADD MEAL TAB ========
+    const [mealName, setMealName] = useState('');
+    const [mealImage, setMealImage] = useState(null);
+    const [isMealLoading, setIsMealLoading] = useState(false);
+    const [mealErrors, setMealErrors] = useState({});
+
+    // ======== STATE FOR ADD CATEGORY TAB ========
+    const [categoryFormData, setCategoryFormData] = useState(initialCategoryState);
+    const [foodImages, setFoodImages] = useState(null); // Holds multiple files
+    const [foodTypes, setFoodTypes] = useState([]);
+    const [isCategoryLoading, setIsCategoryLoading] = useState(false);
+    const [categoryErrors, setCategoryErrors] = useState({});
+
+    // Effect to fetch existing food types for the category dropdown
+    useEffect(() => {
+        const fetchFoodTypes = async () => {
+            try {
+                const response = await getFoodCategories();
+                if (response.success === 1) {
+                    // Ensure unique types are listed
+                    const uniqueTypes = [...new Map(response.data.map(item => [item.name, item])).values()];
+                    setFoodTypes(uniqueTypes);
+                }
+            } catch (err) {
+                toast.error("Failed to fetch existing food types.");
+            }
+        };
+        fetchFoodTypes();
+    }, [getFoodCategories]);
+
+    // ======== LOGIC FOR ADD MEAL TAB ========
+    const validateMeal = () => {
+        const newErrors = {};
+        if (!mealName.trim()) newErrors.name = "Meal name is required.";
+        if (!mealImage) newErrors.image = "Meal image is required.";
+        setMealErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
     };
-  }, [mealImagePreview]);
- 
-  const handleUpload = async (e, fieldName) => {
-    e.preventDefault();
- 
-    setLoading(prev => ({ ...prev, [fieldName.toLowerCase().replace(' ', '')]: true }));
- 
-    try {
-      if (fieldName === "Meal") {
-        // Check if meal name is provided
-        if (!meal.trim()) {
-          toast.error("Please enter meal name");
-          return;
+
+    const handleMealSubmit = async (e) => {
+        e.preventDefault();
+        if (!validateMeal()) {
+            toast.warn("Please fill out all required fields.");
+            return;
         }
- 
-        // Updated to use addMeal API with correct data structure
-        const mealData = {
-          name: meal.trim(),
-          image: mealImage // This can be null if no image is selected
-        };
- 
-        console.log("Sending meal data:", mealData); // Debug log
- 
-        const result = await addMeal(mealData);
-        if (result.success) {
-          // Reset form
-          setMeal('');
-          setMealImage(null);
-          if (mealImagePreview) {
-            URL.revokeObjectURL(mealImagePreview);
-            setMealImagePreview(null);
-          }
-          // Reset file input
-          const fileInput = document.getElementById('meal-image');
-          if (fileInput) fileInput.value = '';
+
+        setIsMealLoading(true);
+        const formData = new FormData();
+        formData.append('name', mealName);
+        formData.append('MealImage', mealImage);
+
+        try {
+            const response = await addMeal1(formData);
+            if (response.success === 1) {
+                toast.success("Meal added successfully!");
+                setMealName('');
+                setMealImage(null);
+                setMealErrors({});
+                e.target.reset(); // Resets the file input
+                if (onMealAdded) onMealAdded(); // Callback for parent component
+            } else {
+                toast.error(response.message || "Failed to add meal.");
+            }
+        } catch (error) {
+            toast.error("An unexpected error occurred while adding the meal.");
+        } finally {
+            setIsMealLoading(false);
         }
-      }
-      else if (fieldName === "Category") {
-        if (!category.trim()) {
-          toast.error("Please enter category name");
-          return;
+    };
+
+    // ======== LOGIC FOR ADD CATEGORY TAB ========
+    const validateCategory = () => {
+        const newErrors = {};
+        if (!categoryFormData.selectedType) {
+            newErrors.selectedType = "You must select a food type or choose to add a new one.";
+        } else if (categoryFormData.selectedType === '__new__' && !categoryFormData.customTypeName.trim()) {
+            newErrors.customTypeName = "The new custom type name is required.";
         }
- 
-        const categoryData = {
-          name: category.trim(),
-          category: "category",
-          foodImage: categoryImage
-        };
-        const result = await addCategory(categoryData);
-        if (result.success) {
-          setCategory('');
-          setCategoryImage(null);
-          // Reset file input
-          const fileInput = document.getElementById('category-image');
-          if (fileInput) fileInput.value = '';
+        
+        if (!categoryFormData.subCategory.trim()) {
+            newErrors.subCategory = "The sub-category name is required.";
         }
-      }
-      else if (fieldName === "Sub Category") {
-        if (!subCategory.trim()) {
-          toast.error("Please enter sub category name");
-          return;
+        if (!foodImages || foodImages.length === 0) {
+            newErrors.image = "At least one representative image is required.";
         }
- 
-        const subCategoryData = {
-          name: subCategory.trim(),
-          category: "subcategory",
-          foodImage: subCategoryImage
-        };
-        const result = await addCategory(subCategoryData);
-        if (result.success) {
-          setSubCategory('');
-          setSubCategoryImage(null);
-          // Reset file input
-          const fileInput = document.getElementById('subcategory-image');
-          if (fileInput) fileInput.value = '';
+        setCategoryErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleCategoryChange = (e) => {
+        const { name, value } = e.target;
+        setCategoryFormData(prev => ({ ...prev, [name]: value }));
+        if (categoryErrors[name]) {
+            setCategoryErrors(prev => ({ ...prev, [name]: null }));
         }
-      }
-    } catch (error) {
-      console.error(`Error uploading ${fieldName}:`, error);
-    } finally {
-      setLoading(prev => ({ ...prev, [fieldName.toLowerCase().replace(' ', '')]: false }));
-    }
-  };
- 
-  const handleImageChange = (e, type) => {
-    const file = e.target.files[0];
- 
-    if (type === 'meal') {
-      setMealImage(file);
-      // Cleanup previous preview URL
-      if (mealImagePreview) {
-        URL.revokeObjectURL(mealImagePreview);
-      }
-      // Create new preview URL for meal image
-      if (file) {
-        const previewUrl = URL.createObjectURL(file);
-        setMealImagePreview(previewUrl);
-      } else {
-        setMealImagePreview(null);
-      }
-    } else if (type === 'category') {
-      setCategoryImage(file);
-    } else if (type === 'subcategory') {
-      setSubCategoryImage(file);
-    }
-  };
- 
-  const handleChooseFile = (type) => {
-    const fileInput = document.getElementById(`${type}-image`);
-    if (fileInput) {
-      fileInput.click();
-    }
-  };
- 
-  return (
-    <div className="container p-4">
-      <div className="row">
-        <h2 className="text-center me-5 mb-4 fw-bold fs-1">Food Upload</h2>
- 
-        {/* Meal Section */}
-        <div className="my-4">
-          <h6 className="mb-2 fw-semibold fs-4">Meal Name :</h6>
-          <div className="row g-3 align-items-center">
-            <div className="col-md-8">
-              <input
-                type="text"
-                className="form-control w-100 shadow-none fs-5 py-3"
-                value={meal}
-                onChange={(e) => setMeal(e.target.value)}
-                placeholder="Enter meal name"
-              />
-            </div>
-            <div className="col-md-4">
-              <button
-                className="btn btn-primary py-3 w-100"
-                onClick={(e) => handleUpload(e, "Meal")}
-                disabled={loading.meal || !meal.trim()}
-              >
-                {loading.meal ? (
-                  <span className="spinner-border spinner-border-sm mx-2" role="status"></span>
-                ) : (
-                  <i className="fa-solid fa-upload mx-2"></i>
-                )}
-                {loading.meal ? 'Uploading...' : 'Upload'}
-              </button>
-            </div>
-          </div>
- 
-          {/* Choose File Button Row */}
-          <div className="row g-3 mt-1">
-            <div className="col-md-4">
-              <input
-                type="file"
-                id="meal-image"
-                className="form-control shadow-none fs-6 py-2"
-                accept="image/*"
-                onChange={(e) => handleImageChange(e, 'meal')}
-              />
-            </div>
-            <div className="col-md-4">
-              <button
-                type="button"
-                className="btn btn-outline-secondary py-2 w-100"
-                onClick={() => handleChooseFile('meal')}
-              >
-                <i className="fa-solid fa-image mx-2"></i>
-                Choose image
-              </button>
-            </div>
- 
-            {/* Meal Image Preview */}
-            {mealImagePreview && (
-              <div className="col-4 d-flex justify-content-end">
-                <div className="text-center">
-                  <img
-                    src={mealImagePreview}
-                    alt="Meal Preview"
-                    className="rounded-circle"
-                    style={{
-                      width: '120px',
-                      height: '120px',
-                      objectFit: 'cover',
-                      border: '2px solid #007bff'
-                    }}
-                  />
-                  <p className="mt-2 text-muted small">Meal Image</p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
- 
- 
-        {/* Category Section - Updated to match Sub Category layout */}
-        <div className="my-1">
-          <h6 className="mb-3 fs-4">Category Name :</h6>
-          <div className="row g-3 align-items-center">
-            <div className="col-md-8">
-              <input
-                type="text"
-                className="form-control shadow-none fs-5 py-3 mb-2"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                placeholder="Enter category"
-              />
-              <input
-                type="file"
-                id="category-image"
-                className="form-control shadow-none"
-                accept="image/*"
-                onChange={(e) => handleImageChange(e, 'category')}
-              />
-            </div>
-            <div className="col-md-4">
-              <button
-                className="btn btn-primary py-3 w-100"
-                onClick={(e) => handleUpload(e, "Category")}
-                disabled={loading.category || !category.trim()}
-              >
-                {loading.category ? (
-                  <span className="spinner-border spinner-border-sm mx-2" role="status"></span>
-                ) : (
-                  <i className="fa-solid fa-upload mx-2"></i>
-                )}
-                {loading.category ? 'Uploading..' : 'Upload'}
-              </button>
-            </div>
-          </div>
-        </div>
- 
-        {/* Sub Category Section */}
-        <div className="my-4">
-          <h6 className="mb-3 fs-4">Sub Category Name :</h6>
-          <div className="row g-3 align-items-center">
-            <div className="col-md-8">
-              <input
-                type="text"
-                className="form-control shadow-none fs-5 py-3 mb-2"
-                value={subCategory}
-                onChange={(e) => setSubCategory(e.target.value)}
-                placeholder="Enter sub category"
-              />
-              <input
-                type="file"
-                id="subcategory-image"
-                className="form-control shadow-none"
-                accept="image/*"
-                onChange={(e) => handleImageChange(e, 'subcategory')}
-              />
-            </div>
-            <div className="col-md-4">
-              <button
-                className="btn btn-primary py-3 w-100"
-                onClick={(e) => handleUpload(e, "Sub Category")}
-                disabled={loading.subcategory || !subCategory.trim()}
-              >
-                {loading.subcategory ? (
-                  <span className="spinner-border spinner-border-sm mx-2" role="status"></span>
-                ) : (
-                  <i className="fa-solid fa-upload mx-2"></i>
-                )}
-                {loading.subcategory ? 'Uploading..' : 'Upload'}
-              </button>
-            </div>
-          </div>
-        </div>
-        {/* Calories */}
-        <div className="my-4">
-          <h6 className="mb-3 fs-4">Calories :</h6>
-          <div className="row g-3 align-items-center">
-            <div className="col-md-8">
-              <input
-                type="text"
-                className="form-control shadow-none fs-5 py-3 mb-2"
-                placeholder="Enter Calories"
-              />
-         
-            </div>
-            <div className="col-md-4">
-              <button
-                className="btn btn-primary py-3 w-100"
-              >
-                <i className="fa-solid fa-upload mx-2"></i>
-                Upload
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
- 
+    };
+
+    const handleCategoryFileChange = (e) => {
+        setFoodImages(e.target.files);
+        if (categoryErrors.image) {
+            setCategoryErrors(prev => ({ ...prev, image: null }));
+        }
+    };
+
+    const handleCategorySubmit = async (e) => {
+        e.preventDefault();
+        if (!validateCategory()) {
+            toast.warn("Please correct the form errors.");
+            return;
+        }
+
+        setIsCategoryLoading(true);
+        const nameToSend = categoryFormData.selectedType === '__new__'
+            ? categoryFormData.customTypeName.trim()
+            : categoryFormData.selectedType;
+
+        const data = new FormData();
+        data.append('name', nameToSend);
+        data.append('category', categoryFormData.subCategory.trim());
+        data.append('calorie', categoryFormData.calorie.trim());
+
+        // Loop through the FileList and append each file for multipart upload
+        if (foodImages) {
+            for (let i = 0; i < foodImages.length; i++) {
+                data.append('foodImage', foodImages[i]);
+            }
+        }
+
+        try {
+            const response = await createCategory(data);
+            if (response.success === 1) {
+                toast.success(`Category '${nameToSend} -> ${categoryFormData.subCategory.trim()}' created!`);
+                setCategoryFormData(initialCategoryState);
+                setFoodImages(null);
+                setCategoryErrors({});
+                e.target.reset(); // Resets all form fields including file input
+                if (onCategoryAdded) onCategoryAdded(); // Callback for parent component
+            } else {
+                toast.error(response.message || "Failed to create category.");
+            }
+        } catch (error) {
+            toast.error("An unexpected error occurred while creating the category.");
+        } finally {
+            setIsCategoryLoading(false);
+        }
+    };
+
+    return (
+        <Tabs defaultActiveKey="category" id="upload-food-tabs" className="mb-3">
+            {/* ====== ADD CATEGORY TAB PANE ====== */}
+            <Tab eventKey="category" title="Add Food Category">
+                <Form onSubmit={handleCategorySubmit} noValidate>
+                    <Alert variant="info">Use this form to add a specific food item (e.g., "Margherita") under a broader food type (e.g., "Pizza").</Alert>
+                    <Row>
+                        <Col md={6}>
+                            <Form.Group className="mb-3">
+                                <Form.Label>Food Type<span className="text-danger">*</span></Form.Label>
+                                <Form.Select name="selectedType" value={categoryFormData.selectedType} onChange={handleCategoryChange} isInvalid={!!categoryErrors.selectedType}>
+                                    <option value="">Select a Type or Add New...</option>
+                                    {foodTypes.map(type => (<option key={type._id} value={type.name}>{type.name}</option>))}
+                                    <option value="__new__">-- Add New Custom Type --</option>
+                                </Form.Select>
+                                <Form.Control.Feedback type="invalid">{categoryErrors.selectedType}</Form.Control.Feedback>
+                            </Form.Group>
+                        </Col>
+                        <Col md={6}>
+                            {categoryFormData.selectedType === '__new__' && (
+                                <Form.Group className="mb-3">
+                                    <Form.Label>New Custom Type Name<span className="text-danger">*</span></Form.Label>
+                                    <Form.Control type="text" name="customTypeName" value={categoryFormData.customTypeName} onChange={handleCategoryChange} placeholder="e.g., Pizza" isInvalid={!!categoryErrors.customTypeName} required />
+                                    <Form.Control.Feedback type="invalid">{categoryErrors.customTypeName}</Form.Control.Feedback>
+                                </Form.Group>
+                            )}
+                        </Col>
+                    </Row>
+                    <Row>
+                        <Col md={6}>
+                            <Form.Group className="mb-3">
+                                <Form.Label>Sub-Category Name<span className="text-danger">*</span></Form.Label>
+                                <Form.Control type="text" name="subCategory" value={categoryFormData.subCategory} onChange={handleCategoryChange} placeholder="e.g., Veggie Delight" isInvalid={!!categoryErrors.subCategory} required />
+                                <Form.Control.Feedback type="invalid">{categoryErrors.subCategory}</Form.Control.Feedback>
+                            </Form.Group>
+                        </Col>
+                        <Col md={6}>
+                            <Form.Group className="mb-3">
+                                <Form.Label>Calories (Optional)</Form.Label>
+                                <Form.Control type="text" name="calorie" value={categoryFormData.calorie} onChange={handleCategoryChange} placeholder="e.g., 350 kcal" />
+                            </Form.Group>
+                        </Col>
+                    </Row>
+                    <Form.Group className="mb-3">
+                        <Form.Label>Category Images<span className="text-danger">*</span></Form.Label>
+                        <Form.Control type="file" onChange={handleCategoryFileChange} isInvalid={!!categoryErrors.image} required multiple />
+                        <Form.Control.Feedback type="invalid">{categoryErrors.image}</Form.Control.Feedback>
+                    </Form.Group>
+                    <Button variant="primary" type="submit" disabled={isCategoryLoading}>
+                        {isCategoryLoading ? <><Spinner as="span" size="sm" /> Creating...</> : "Create Category"}
+                    </Button>
+                </Form>
+            </Tab>
+
+            {/* ====== ADD MEAL TAB PANE ====== */}
+            <Tab eventKey="meal" title="Add Meal Type">
+                <Form onSubmit={handleMealSubmit} noValidate>
+                    <Alert variant="info">Use this form to create a new meal type (e.g., "Breakfast," "Lunch"). You can then assign food items to this meal.</Alert>
+                    <Row>
+                        <Col md={6}>
+                            <Form.Group className="mb-3">
+                                <Form.Label>Meal Name<span className="text-danger">*</span></Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    value={mealName}
+                                    onChange={(e) => setMealName(e.target.value)}
+                                    isInvalid={!!mealErrors.name}
+                                    required
+                                />
+                                <Form.Control.Feedback type="invalid">{mealErrors.name}</Form.Control.Feedback>
+                            </Form.Group>
+                        </Col>
+                        <Col md={6}>
+                            <Form.Group className="mb-3">
+                                <Form.Label>Meal Image<span className="text-danger">*</span></Form.Label>
+                                <Form.Control
+                                    type="file"
+                                    onChange={(e) => setMealImage(e.target.files[0])}
+                                    isInvalid={!!mealErrors.image}
+                                    required
+                                />
+                                <Form.Control.Feedback type="invalid">{mealErrors.image}</Form.Control.Feedback>
+                            </Form.Group>
+                        </Col>
+                    </Row>
+                    <Button variant="primary" type="submit" disabled={isMealLoading}>
+                        {isMealLoading ? <><Spinner as="span" size="sm" /> Adding Meal...</> : "Add Meal"}
+                    </Button>
+                </Form>
+            </Tab>
+        </Tabs>
+    );
+};
+
+export default UploadFood;

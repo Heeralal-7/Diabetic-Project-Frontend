@@ -1,14 +1,16 @@
-import React, { useState,useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useDispatch} from "react-redux";
-import { submitPhoneNumber, verifyOtp } from "../../../Redux/signupSlice";
-import { useLocation } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { submitPhoneNumber, verifyOtp, updateUser } from "../../../Redux/signupSlice"; // Ensure updateUser is in slice
 import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/ReactToastify.css"; // Import toast CSS
+import { getFCMToken } from "../../../getFCMToken"; // Path jahan getFCMToken function rakha hai
+import "react-toastify/dist/ReactToastify.css";
 import loginImg from "../../Assets/img/Account/Login.png";
 import OtpImg from "../../Assets/img/Account/Otp.png";
 
-// Login Component
+// ========================================================
+// 1. LOGIN COMPONENT (Phone Number Input)
+// ========================================================
 const Login = () => {
   const [formData, setFormData] = useState({
     number: "",
@@ -46,14 +48,6 @@ const Login = () => {
       .catch((error) => {
         toast.error("Failed to send OTP, please try again.");
       });
-      navigate("/otp-verify", {
-        state: { 
-          number: formData.number, 
-          ctrCode: "+91" 
-        },
-        replace: true // optional, prevents going back to login
-      });
-      
   };
 
   return (
@@ -113,7 +107,9 @@ const Login = () => {
   );
 };
 
-// Second functional component
+// ========================================================
+// 2. OTP VERIFY COMPONENT (OTP Input & FCM Sync)
+// ========================================================
 const OtpVerify = () => {
   const [otp, setOtp] = useState("");
   const [isResending, setIsResending] = useState(false);
@@ -127,76 +123,72 @@ const OtpVerify = () => {
   useEffect(() => {
     if (!location.state) {
       toast.error("Phone number not found. Please try again.");
-      navigate("/UserLogin"); // or wherever your login route is
+      navigate("/UserLogin");
     }
   }, [location.state, navigate]);
 
-
   const handleOtpChange = (e) => {
     const { value } = e.target;
-
     if (value.length <= 6 && /^\d*$/.test(value)) {
       setOtp(value);
     }
-  };
+  }; 
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-  
-    dispatch(verifyOtp({ otp, ctrCode, number }))
+  // 🔥 MAIN SUBMIT LOGIC WITH FCM INTEGRATION
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  try {
+    // 1. Pehle FCM Token generate kar lo
+    console.log("Generating Token...");
+    const fcmToken = await getFCMToken(); 
+    
+    // 2. Ab Verify OTP dispatch karein aur saath mein regId bhi bhejein
+    dispatch(verifyOtp({ otp, ctrCode, number, regId: fcmToken }))
       .unwrap()
       .then((response) => {
-        console.log("OTP Verify Response:", response); // Debugging purpose
-  
-        if (
-          response.success === 1 &&
-          response.message === "User logged in successfully"
-        ) {
-          // ✅ Store token from details
+        if (response.success === 1) {
           localStorage.setItem("token", response.details.token);
-  
-          toast.success("OTP verified successfully! Redirecting to home...");
+          localStorage.setItem("userId", response.details.userId);
+          localStorage.setItem("name", response.details.name || "");
+          localStorage.setItem("regId", response.details.regId); // DB se wapas aaya hua token
+
+          toast.success("Login Successful!");
           navigate("/");
-        } else {
-          toast.error("OTP verification failed. Redirecting to registration...");
-          navigate("/UserLogin");
         }
       })
       .catch((error) => {
-        toast.error("Failed to verify OTP, please try again.");
+        toast.error("Invalid OTP or Token issue.");
       });
-  };
+
+  } catch (err) {
+    console.error("FCM Error:", err);
+    // Agar token fail bhi ho jaye toh login karwa do (Optional)
+    dispatch(verifyOtp({ otp, ctrCode, number }));
+  }
+};
   
-  
-  // Handle Resend OTP
   const handleResendOtp = () => {
     setIsResending(true);
-
-    // Simulate OTP resend logic
     setTimeout(() => {
       setIsResending(false);
-      toast.success("OTP resent successfully!", {
-        position: "top-right",
-        autoClose: 3000,
-      });
-    }, 2000); // Simulate API call delay
+      toast.success("OTP resent successfully!");
+    }, 2000);
   };
 
   return (
     <>
       <div className="container-fluid login-container">
         <div className="row justify-content-center align-items-center w-100">
-          {/* Left side illustration */}
           <div className="col-md-6 login-image">
             <img src={OtpImg} alt="Illustration" />
           </div>
 
-          {/* Right side form */}
           <div className="col-md-6 login-form">
             <div className="otp-form p-4 shadow-lg rounded">
               <h2 className="mb-3">OTP Verification</h2>
               <p className="text-muted mb-4">
-                Enter the OTP sent to your Phone Number
+                Enter the OTP sent to <strong>+91 {number}</strong>
               </p>
 
               <form onSubmit={handleSubmit}>
@@ -204,7 +196,7 @@ const OtpVerify = () => {
                   <input
                     type="text"
                     className="form-control otp-input"
-                    placeholder="Enter OTP"
+                    placeholder="Enter 6-digit OTP"
                     value={otp}
                     onChange={handleOtpChange}
                     maxLength="6"
@@ -216,7 +208,7 @@ const OtpVerify = () => {
                   type="submit"
                   className="btn btn-primary w-100 icon-box btn border-0 btn-outline-secondary"
                 >
-                  Verify
+                  Verify & Login
                 </button>
               </form>
 
@@ -224,7 +216,7 @@ const OtpVerify = () => {
                 <p className="text-muted">
                   Didn't receive OTP? &nbsp;
                   <span
-                    className="text-primary"
+                    className="text-primary fw-bold"
                     onClick={handleResendOtp}
                     style={{ cursor: "pointer" }}
                   >
@@ -240,75 +232,5 @@ const OtpVerify = () => {
     </>
   );
 };
-
-// // Third functional component
-// const ForgotPassword = () => {
-//   const [number, setnumber] = useState("");
-
-// Third functional component
-// const ForgotPassword = () => {
-//   return (
-//     <>
-//       <h1>Forgot Password Component</h1>
-//     </>
-//   );
-// };
-
-//   return (
-//     <>
-//       <div className="container-fluid login-container">
-//         <div className="row justify-content-center align-items-center w-100">
-//           {/* Left side with illustration */}
-//           <div className="col-md-6 d-none d-md-block">
-//             <img
-//               src="https://via.placeholder.com/600x800"
-//               alt="Forgot Password Illustration"
-//               className="img-fluid"
-//             />
-//           </div>
-
-//           {/* Right side with form */}
-//           <div className="col-md-6">
-//             <div className="forgot-pass-box p-5 shadow-lg rounded">
-//               <h2 className="mb-4 text-center">Forgot Password</h2>
-//               <p className="text-muted mb-4 text-center">
-//                 Enter your registered Phone Number to receive a password reset
-//                 link.
-//               </p>
-//               <form onSubmit={handleSubmit}>
-//                 <div className="mb-3">
-//                   <label htmlFor="number" className="form-label">
-//                     Phone Number
-//                   </label>
-//                   <input
-//                     type="number"
-//                     className="form-control"
-//                     id="number"
-//                     value={number}
-//                     onChange={(e) => setnumber(e.target.value)}
-//                     placeholder="Enter your Phone Number"
-//                   />
-//                 </div>
-//                 <button
-//                   type="submit"
-//                   className="btn btn-primary w-100 icon-box btn border-0 btn-outline-secondary"
-//                 >
-//                   Send Reset Link
-//                 </button>
-//               </form>
-//               <div className="mt-4 text-center">
-//                 <Link to="/UserLogin" className="text-primary">
-//                   Back to Login
-//                 </Link>
-//               </div>
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-
-//       <ToastContainer />
-//     </>
-//   );
-// };
 
 export { Login, OtpVerify };

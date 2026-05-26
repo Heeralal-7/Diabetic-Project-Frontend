@@ -1,0 +1,7 @@
+.doctor-sidebar.collapsed .link-text {
+  display: none;
+}
+
+.doctor-sidebar.collapsed .navbar-brand img {
+  width: 40px !important;
+}

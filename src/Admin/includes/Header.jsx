@@ -45,7 +45,7 @@ const Header = () => {
             </div>
             {/*Navbar nav */}
             <ul className="navbar-nav navbar-right-wrap ms-lg-auto d-flex nav-top-wrap align-items-center ms-4 ms-lg-0">
-              <Link className="form-check form-switch theme-switch btn btn-ghost btn-icon rounded-circle border-0 mb-0 ">
+              {/* <Link className="form-check form-switch theme-switch btn btn-ghost btn-icon rounded-circle border-0 mb-0 ">
                 <input
                   className="form-check-input"
                   type="checkbox"
@@ -56,8 +56,9 @@ const Header = () => {
                   className="form-check-label"
                   htmlFor="flexSwitchCheckDefault"
                 />
-              </Link>
-              <li className="dropdown stopevent ms-2">
+              </Link> */}
+              {/* Notifications */}
+              <li className="dropdown-li stopevent ms-2">
                 <Link
                   className="btn btn-ghost btn-icon rounded-circle border-0"
                   data-bs-auto-close="outside"
@@ -218,8 +219,13 @@ const Header = () => {
                   </div>
                 </div>
               </li>
+              <li>
+                {/* Display admin name here */}
+                {admin && <span>{admin.name}</span>}
+              </li>
+
               {/* List */}
-              <li className="dropdown ms-2">
+              <li className="dropdown-li ms-2">
                 <Link
                   className="rounded-circle"
                   role="button"
@@ -244,8 +250,8 @@ const Header = () => {
                 >
                   <div className="px-4 pb-0 pt-2">
                     <div className="lh-1 ">
-                      <h5 className="mb-1"> John E. Grainger</h5>
-                      <Link className="text-inherit fs-6">View my profile</Link>
+                      <h5 className="mb-1">{admin ? admin.name : 'Admin'}</h5>
+                      <Link to="/dashboard/edit" className="text-inherit fs-6">View my profile</Link>
                     </div>
                     <div className=" dropdown-divider mt-3 mb-2" />
                   </div>

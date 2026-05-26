@@ -888,6 +888,22 @@ input[type="number"]::-webkit-inner-spin-button {
     border-bottom: 0 !important;
   }
 }
+.nav-item-hover{
+  margin-top: 0px !important;
+}
+.nav-item-hover .nav-link.text-start {
+  color: #000000A6 !important;
+  margin-top: 0 !important;
+}
+.nav-item-hover:hover{
+  width: auto !important;
+  background-color: transparent !important;
+  
+}
+.nav-item-hover .nav-link {
+  color: var(--main-blue-color) !important;
+  background-color: none !important;
+}
 .bg-nav {
   transition: all 0.6s ease-in-out;
   background-color: #cfe2ff93;

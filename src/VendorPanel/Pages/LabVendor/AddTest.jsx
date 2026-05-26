@@ -1,7 +1,8 @@
 import axios from "axios";
-import React, { useState } from "react";
+import React, { useState ,useContext,useEffect} from "react";
 import { useDispatch } from "react-redux";
 import {createtest} from "../../../Redux/labtestSlice"
+import { MyContext } from "../../../Context/Context";
 
 const AddTest = () => {
   const [testType, setTestType] = useState("");
@@ -18,9 +19,16 @@ const AddTest = () => {
   const [selectedTestName, setSelectedTestName] = useState("");
   const [description, setDescription] = useState("");
   const [precautions, setPrecautions] = useState("");
-
+ const [selectedTestOrgan,setSelectedTestOrgan] = useState("")
   const URL = process.env.REACT_APP_API_URL;
   const dispatch = useDispatch();
+
+  const {organs, getAllOrgans} = React.useContext(MyContext);
+ 
+  useEffect(() => {
+    getAllOrgans();
+    console.log("organs",organs);
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -33,6 +41,7 @@ const AddTest = () => {
     const formData = {
       testCategory: selectedCategory,
       testName: selectedTestName,
+      organ: selectedTestOrgan,
       description,
       precautions,
       amount,
@@ -49,6 +58,7 @@ const AddTest = () => {
 
       setSelectedCategory("");
       setSelectedTestName("");
+      setSelectedTestOrgan("");
       setDescription("");
       setPrecautions("");
       setAmount("");
@@ -128,6 +138,26 @@ const AddTest = () => {
                   ))}
               </select>
             </div>
+
+                  {/* Test Organs */}
+            <div className="mb-3">
+              <label className="form-label">Test Name</label>
+              <select
+                className="form-select"
+                required
+                value={selectedTestOrgan}
+                onChange={(e) => setSelectedTestOrgan(e.target.value)}
+              >
+                <option value="">Select Organs</option>
+                {organs.length > 0 &&
+                  organs.map((org, index) => (
+                    <option key={index} value={org.name}>
+                      {org.organName}
+                    </option>
+                  ))}
+              </select>
+            </div>
+ 
 
             {/* Description */}
             <div className="mb-3">

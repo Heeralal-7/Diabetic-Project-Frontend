@@ -1,0 +1,200 @@
+/* src/components/Assets/Css/Registration.css */
+
+.registration-container {
+    max-width: 800px; /* Adjust as needed */
+    margin: 50px auto;
+    padding: 30px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    font-family: 'Arial', sans-serif; /* Example font */
+}
+
+.registration-container h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 30px;
+    font-size: 2em;
+}
+
+.registration-form {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* Two columns for form fields */
+    gap: 20px; /* Space between form elements */
+    align-items: center;
+}
+
+/* Adjust for single-column layout on smaller screens */
+@media (max-width: 768px) {
+    .registration-form {
+        grid-template-columns: 1fr;
+    }
+    .registration-container {
+        margin: 20px;
+        padding: 20px;
+    }
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px; /* Space below each group */
+}
+
+.form-group label {
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #555;
+    font-size: 0.95em;
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="tel"],
+.form-group input[type="password"],
+.form-group input[type="number"],
+.form-group input[type="file"],
+.form-group select { /* Added select for potential future use */
+    padding: 12px 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1em;
+    width: 100%; /* Ensure inputs take full width of their grid cell */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+}
+
+.form-group input[type="file"] {
+    padding-top: 8px; /* Adjust for file input appearance */
+}
+
+/* Styling for Country Code inputs */
+.country-code-group {
+    display: flex;
+    flex-direction: row; /* Arrange side-by-side */
+    align-items: center;
+    grid-column: 1 / -1; /* Span across both columns if needed, or adjust layout */
+}
+
+.country-code-group label {
+    margin-right: 10px;
+    margin-bottom: 0; /* Remove bottom margin for inline labels */
+}
+
+.country-code-input {
+    flex: 0 0 80px; /* Fixed width for country code */
+    margin-right: 15px; /* Space between codes */
+}
+
+/* Login Type Buttons */
+.login-type-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.login-type-buttons button {
+    padding: 10px 15px;
+    border: 1px solid #007bff;
+    border-radius: 5px;
+    background-color: #fff;
+    color: #007bff;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.login-type-buttons button:hover {
+    background-color: #007bff;
+    color: #fff;
+}
+
+.login-type-buttons button.active {
+    background-color: #007bff;
+    color: #fff;
+    font-weight: bold;
+}
+
+/* Submit Button */
+.submit-button {
+    grid-column: 1 / -1; /* Span across both columns */
+    padding: 12px 20px;
+    background-color: #28a745; /* Green for submit */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.1em;
+    font-weight: bold;
+    transition: background-color 0.3s;
+    margin-top: 10px; /* Space above the button */
+}
+
+.submit-button:hover:not(:disabled) {
+    background-color: #218838;
+}
+
+.submit-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+/* Error Message */
+.error-message {
+    grid-column: 1 / -1; /* Span across both columns */
+    color: #dc3545;
+    text-align: center;
+    margin-top: 15px;
+    font-weight: bold;
+}
+
+/* Link Button */
+.link-button {
+    background: none;
+    border: none;
+    color: #007bff;
+    cursor: pointer;
+    text-decoration: underline;
+    font-size: 1em;
+    padding: 0;
+    margin-left: 5px;
+}
+
+.link-button:hover {
+    color: #0056b3;
+}
+
+/* Placeholder Styling */
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: #aaa;
+    opacity: 1; /* Firefox */
+}
+
+.form-group input:-ms-input-placeholder,
+.form-group textarea:-ms-input-placeholder {
+    color: #aaa;
+}
+
+.form-group input::-ms-input-placeholder,
+.form-group textarea::-ms-input-placeholder {
+    color: #aaa;
+}
+
+/* Adjustments for file inputs (optional but recommended for better UX) */
+.form-group input[type="file"] {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    background-color: #f8f9fa;
+}
+
+.form-group input[type="file"]:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Ensure labels for file inputs are clear */
+.form-group label[for] {
+    cursor: pointer; /* Indicates it's clickable */
+}

@@ -19,34 +19,23 @@ export const verifyOtp = createAsyncThunk(
   "auth/verifyOtp",
   async (userData, { rejectWithValue }) => {
     try {
-      const { data } = await axios.post(
-        `${URL}/user/verify`,
-
-        userData
-      );
-  
+      // userData mein ab { otp, ctrCode, number, regId } charo honge
+      const { data } = await axios.post(`${URL}/user/verify`, userData);
       return data;
     } catch (error) {
-      return rejectWithValue(error.data);
+      return rejectWithValue(error.response?.data);
     }
   }
 );
 
 export const updateUser = createAsyncThunk(
   "auth/updateUser",
-  async (userData, { rejectWithValue }) => {
+  async ({ userId, regId }, { rejectWithValue }) => {
     try {
-      const token = JSON.parse(sessionStorage.getItem("token"));
-
-      const { data } = await axios.patch(`${URL}/user/update-user`, userData, {
-        headers: {
-          token: token,
-        },
-      });
-
+      const { data } = await axios.post(`${URL}/user/update-user`, { userId, regId });
       return data;
     } catch (error) {
-      return rejectWithValue(error.data);
+      return rejectWithValue(error.response?.data || "Error updating user");
     }
   }
 );

@@ -1,0 +1,39 @@
+/* src/components/CartButton/CartButton.css */
+.cart-fixed-button {
+  position: fixed; /* Fixes the button relative to the viewport */
+  bottom: 20px;    /* 20px from the bottom */
+  right: 20px;     /* 20px from the right */
+  background-color: #dc3545; /* Bootstrap danger color (red) */
+  color: white;
+  border: none;
+  border-radius: 50px; /* Makes it pill-shaped or fully round if padding is equal */
+  padding: 12px 25px; /* Adjust padding as needed */
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Adds a subtle shadow */
+  z-index: 1000; /* Ensures it stays on top of other content */
+  display: flex; /* For icon and text alignment */
+  align-items: center;
+  gap: 8px; /* Space between icon and text */
+  transition: background-color 0.3s ease; /* Smooth transition for hover */
+}
+
+.cart-fixed-button:hover {
+  background-color: #c82333; /* Slightly darker red on hover */
+}
+
+/* For icon (assuming you use Remix Icon or similar, adjust if using Font Awesome etc.) */
+.cart-fixed-button i {
+  font-size: 1.3rem; /* Adjust icon size */
+}
+
+/* Optional: For cart item count badge */
+/* .cart-item-count {
+  background-color: #007bff;
+  color: white;
+  border-radius: 50%;
+  padding: 3px 8px;
+  font-size: 0.8rem;
+  margin-left: 5px;
+} */

@@ -1,0 +1,61 @@
+.care-payment-container {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e6f7ff 100%);
+  min-height: 100vh;
+}
+
+.membership-card {
+  border-left: 4px solid #10B981;
+  transition: all 0.3s ease;
+}
+
+.membership-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.1);
+}
+
+.icon-wrapper {
+  background: rgba(16, 185, 129, 0.1);
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.feature-badge {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10B981;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  display: inline-block;
+  margin: 2px;
+}
+
+/* Success Animation */
+.success-animation {
+  margin: 0 auto;
+}
+
+.checkmark__circle {
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  stroke-width: 2;
+  stroke-miterlimit: 10;
+  stroke: #10B981;
+  fill: none;
+  animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.checkmark__check {
+  transform-origin: 50% 50%;
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+
+@keyframes stroke {
+  100% { stroke-dashoffset: 0; }
+}

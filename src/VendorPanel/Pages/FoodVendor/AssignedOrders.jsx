@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { MyContext } from '../../../Context/Context';
-import { Table, Button, Badge, Alert, Spinner, Modal } from 'react-bootstrap';
+import { Table, Button, Badge, Alert, Spinner, Modal, Form } from 'react-bootstrap';
 
 const AssignedOrders = ({ refreshKey, onRefresh }) => {
   const { 
@@ -13,7 +13,7 @@ const AssignedOrders = ({ refreshKey, onRefresh }) => {
   
   const [orders, setOrders] = useState([]);
   const [drivers, setDrivers] = useState([]);
-  const [showModal, setShowModal] = useState(false);
+  const [showReassignModal, setShowReassignModal] = useState(false); // Renamed for clarity
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [selectedDriver, setSelectedDriver] = useState('');
@@ -21,14 +21,27 @@ const AssignedOrders = ({ refreshKey, onRefresh }) => {
   const [apiError, setApiError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
 
+  // Helper function to calculate discounted price
+  const calculateDiscountedPrice = (item) => {
+    const originalAmount = parseFloat(item.FoodItem?.amount || '0');
+    const discountPercentage = parseFloat(item.FoodItem?.discountPercentage || '0');
+    
+    if (discountPercentage > 0 && originalAmount > 0) {
+      const discountedAmount = originalAmount * (1 - discountPercentage / 100);
+      return discountedAmount.toFixed(2); // Format to 2 decimal places
+    }
+    return originalAmount.toFixed(2); // No discount or invalid values, return original
+  };
+
   const fetchAssignedOrders = async () => {
     try {
       setLocalLoading(true);
       setApiError(null);
-      const result = await getVendorOrdersByStatus('2');
+      const result = await getVendorOrdersByStatus('2'); // Status '2' for Assigned
       
       if (result.success === 1) {
         const processedOrders = await Promise.all(result.details.map(async (order) => {
+          // Ensure userId and driverId are objects if they exist
           const populatedOrder = {
             ...order,
             userId: order.userId && typeof order.userId === 'object' 
@@ -37,21 +50,33 @@ const AssignedOrders = ({ refreshKey, onRefresh }) => {
             driverId: order.driverId && typeof order.driverId === 'object'
               ? order.driverId
               : { _id: order.driverId, name: 'Loading...' },
-            items: order.items ? await Promise.all(order.items.map(async (item) => ({
-              ...item,
-              FoodItem: item.FoodItem && typeof item.FoodItem === 'object'
-                ? item.FoodItem
-                : { _id: item.foodId, foodName: 'Loading...', foodSubCategory: '' },
-              extraItems: item.extraItems || []
-            }))) : []
           };
+
+          // Process items to calculate discounted prices and ensure FoodItem structure
+          if (populatedOrder.items) {
+            populatedOrder.items = await Promise.all(populatedOrder.items.map(async (item) => {
+              const foodItem = item.FoodItem && typeof item.FoodItem === 'object'
+                ? item.FoodItem
+                : { _id: item.foodId, foodName: 'Loading...', foodSubCategory: '', amount: '0', discountPercentage: '0' }; // Default values
+              
+              return {
+                ...item,
+                FoodItem: foodItem,
+                displayPrice: calculateDiscountedPrice({ FoodItem: foodItem }) // Calculate display price
+              };
+            }));
+          } else {
+            populatedOrder.items = [];
+          }
           return populatedOrder;
         }));
 
         setOrders(processedOrders);
+      } else {
+        setApiError(result.message || "Failed to fetch assigned orders.");
       }
     } catch (err) {
-      setApiError(err.message);
+      setApiError(err.message || "An unexpected error occurred while fetching assigned orders.");
       console.error("Error fetching assigned orders:", err);
     } finally {
       setLocalLoading(false);
@@ -63,6 +88,8 @@ const AssignedOrders = ({ refreshKey, onRefresh }) => {
       const result = await getOnlineDriversForVendor();
       if (result.success === 1) {
         setDrivers(result.details);
+      } else {
+        console.error("Failed to fetch online drivers:", result.message);
       }
     } catch (err) {
       console.error("Error fetching online drivers:", err);
@@ -84,51 +111,71 @@ const AssignedOrders = ({ refreshKey, onRefresh }) => {
 
   const handleReassignDriver = (order) => {
     setSelectedOrder(order);
-    setSelectedDriver('');
-    setShowModal(true);
+    setSelectedDriver(''); // Clear previously selected driver
+    setApiError(null); // Clear previous errors
+    setSuccessMessage(null); // Clear previous success messages
+    setShowReassignModal(true);
   };
 
   const handleRowClick = (order) => {
     setSelectedOrder(order);
+    setApiError(null);
+    setSuccessMessage(null);
     setShowDetailsModal(true);
   };
 
   const handleDetailsClick = (e, order) => {
     e.stopPropagation();
     setSelectedOrder(order);
+    setApiError(null);
+    setSuccessMessage(null);
     setShowDetailsModal(true);
   };
 
   const confirmReassignDriver = async () => {
     try {
+      if (!selectedOrder) {
+        setApiError("No order selected for reassignment.");
+        return;
+      }
       if (!selectedDriver) {
-        setApiError("Please select a driver");
+        setApiError("Please select a driver to reassign.");
         return;
       }
 
       setLocalLoading(true);
+      setApiError(null); // Clear previous errors
+      
       const result = await assignDriverToOrder(selectedOrder._id, selectedDriver);
       
       if (result.success === 1) {
         setSuccessMessage("Driver reassigned successfully!");
+        // Find the newly assigned driver's full details
+        const newDriver = drivers.find(d => d._id === selectedDriver) || { _id: selectedDriver, name: 'Unknown Driver' };
+        
         setOrders(prevOrders => 
           prevOrders.map(order => 
             order._id === selectedOrder._id
               ? { 
                   ...order, 
-                  driverId: drivers.find(d => d._id === selectedDriver) || { _id: selectedDriver, name: 'New Driver' },
-                  status: "2"
+                  driverId: newDriver, // Update with full driver object
+                  status: "2" // Ensure status remains 'Assigned'
                 }
               : order
           )
         );
-        setShowModal(false);
+        setSelectedOrder(prev => ({ // Update selectedOrder as well if modal is open
+          ...prev, 
+          driverId: newDriver, 
+          status: "2" 
+        }));
+        setShowReassignModal(false); // Close reassign modal
         setTimeout(() => setSuccessMessage(null), 3000);
       } else {
-        setApiError(result.message || "Action failed");
+        setApiError(result.message || "Reassignment failed.");
       }
     } catch (error) {
-      setApiError(error.message);
+      setApiError(error.message || "An unexpected error occurred during driver reassignment.");
       console.error("Error reassigning driver:", error);
     } finally {
       setLocalLoading(false);
@@ -199,16 +246,22 @@ const AssignedOrders = ({ refreshKey, onRefresh }) => {
                   <td>{order.userId?.name || 'N/A'}</td>
                   <td>{order.driverId?.name || 'Not assigned'}</td>
                   <td>
-                    {order.items.map((item, index) => (
-                      <div key={`${order._id}-item-${index}`}>
-                        <strong>{item.FoodItem?.foodName || 'Unknown Item'}</strong> (x{item.quantity})
-                        {item.extraItems?.length > 0 && (
-                          <div className="text-muted small">
-                            Extras: {item.extraItems.map(extra => extra.name).join(', ')}
-                          </div>
+                    {/* --- MODIFIED CODE START --- */}
+                    {order.items.length > 0 ? (
+                      <>
+                        <div>
+                          <strong>{order.items[0].FoodItem?.foodName || 'Unknown Item'} {order.items[0].FoodItem?.foodSubCategory || ''}</strong> (x{order.items[0].quantity})
+                        </div>
+                        {order.items.length > 1 && (
+                          <Badge bg="secondary" className="mt-1">
+                            +{order.items.length - 1} more items
+                          </Badge>
                         )}
-                      </div>
-                    ))}
+                      </>
+                    ) : (
+                      'No items'
+                    )}
+                    {/* --- MODIFIED CODE END --- */}
                   </td>
                   <td>₹{order.totalAmount || order.price || '0.00'}</td>
                   <td>
@@ -251,18 +304,29 @@ const AssignedOrders = ({ refreshKey, onRefresh }) => {
             </tbody>
           </Table>
 
-          <Modal show={showModal} onHide={() => setShowModal(false)}>
+          {/* Reassign Driver Modal */}
+          <Modal show={showReassignModal} onHide={() => setShowReassignModal(false)}>
             <Modal.Header closeButton>
               <Modal.Title>Reassign Driver to Order #{selectedOrder?._id.substring(0, 8)}</Modal.Title>
             </Modal.Header>
             <Modal.Body>
+              {apiError && (
+                <Alert variant="danger" dismissible onClose={() => setApiError(null)}>
+                  {apiError}
+                </Alert>
+              )}
+              {successMessage && (
+                <Alert variant="success" dismissible onClose={() => setSuccessMessage(null)}>
+                  {successMessage}
+                </Alert>
+              )}
               <div className="mb-3">
                 <label className="form-label">Current Driver: {selectedOrder?.driverId?.name || 'None'}</label>
                 <select 
                   className="form-select"
                   value={selectedDriver}
                   onChange={(e) => setSelectedDriver(e.target.value)}
-                  disabled={loading}
+                  disabled={localLoading} // Use localLoading for this modal's actions
                 >
                   <option value="">Choose a new driver</option>
                   {drivers.map(driver => (
@@ -274,19 +338,20 @@ const AssignedOrders = ({ refreshKey, onRefresh }) => {
               </div>
             </Modal.Body>
             <Modal.Footer>
-              <Button variant="secondary" onClick={() => setShowModal(false)} disabled={loading}>
+              <Button variant="secondary" onClick={() => setShowReassignModal(false)} disabled={localLoading}>
                 Cancel
               </Button>
               <Button 
                 variant="primary" 
                 onClick={confirmReassignDriver}
-                disabled={!selectedDriver || loading}
+                disabled={!selectedDriver || localLoading}
               >
-                {loading ? <Spinner size="sm" animation="border" /> : 'Reassign Driver'}
+                {localLoading ? <Spinner size="sm" animation="border" /> : 'Reassign Driver'}
               </Button>
             </Modal.Footer>
           </Modal>
 
+          {/* Order Details Modal */}
           <Modal show={showDetailsModal} onHide={() => setShowDetailsModal(false)} size="lg">
             <Modal.Header closeButton>
               <Modal.Title>Order Details #{selectedOrder?._id.substring(0, 8)}</Modal.Title>
@@ -303,12 +368,14 @@ const AssignedOrders = ({ refreshKey, onRefresh }) => {
 
                   <div className="mb-4">
                     <h5>Order Items</h5>
-                    <table className="table">
+                    <Table striped bordered hover responsive size="sm"> {/* Using react-bootstrap Table */}
                       <thead>
                         <tr>
                           <th>Item</th>
                           <th>Quantity</th>
-                          <th>Price</th>
+                          <th>Original Price (each)</th>
+                          <th>Discount (%)</th>
+                          <th>Final Price (each)</th>
                           <th>Extras</th>
                         </tr>
                       </thead>
@@ -316,14 +383,15 @@ const AssignedOrders = ({ refreshKey, onRefresh }) => {
                         {selectedOrder.items?.map((item, index) => (
                           <tr key={`detail-${index}`}>
                             <td>
-                              <div>{item.FoodItem?.foodName || 'Unknown Item'}</div>
-                              <small className="text-muted">{item.FoodItem?.foodSubCategory || ''}</small>
+                              <div>{item.FoodItem?.foodName || 'Unknown Item'} {item.FoodItem?.foodSubCategory || ''}</div>
                             </td>
                             <td>{item.quantity}</td>
-                            <td>₹{item.finalprice || item.price || '0.00'}</td>
+                            <td>₹{parseFloat(item.FoodItem?.amount || '0').toFixed(2)}</td>
+                            <td>{item.FoodItem?.discountPercentage || '0'}%</td>
+                            <td>₹{item.displayPrice}</td> {/* Display calculated price */}
                             <td>
                               {item.extraItems?.length > 0 ? (
-                                <ul className="list-unstyled">
+                                <ul className="list-unstyled mb-0">
                                   {item.extraItems.map((extra, i) => (
                                     <li key={`extra-${i}`}>
                                       {extra.name} (₹{extra.price || '0.00'})
@@ -335,7 +403,7 @@ const AssignedOrders = ({ refreshKey, onRefresh }) => {
                           </tr>
                         ))}
                       </tbody>
-                    </table>
+                    </Table>
                   </div>
 
                   <div className="row">

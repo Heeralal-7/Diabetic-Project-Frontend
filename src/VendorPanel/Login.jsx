@@ -30,36 +30,50 @@ const VendorLogin = () => {
     });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (!formData.type) {
-      toast.error("Please select a vendor type.");
-      return;
-    }
+  if (!formData.type) {
+    toast.error("Please select a vendor type.");
+    return;
+  }
 
-   try {
+  try {
     const { data } = await axios.post(`${URL}/vendor/login`, formData);
 
     if (data.success) {
       // Token key name based on formData.type
       let tokenKey = "";
+      let vendorIdKey = "";
+      let redirectPath = "";
 
       if (formData.type === "Lab") {
         tokenKey = "labtoken";
-        navigate("/panel");
+        vendorIdKey = "labVendorId";
+        redirectPath = "/panel";
       } else if (formData.type === "Pharmacy") {
         tokenKey = "Pharmacytoken";
-        navigate("/pharmacy-dashboard");
+        vendorIdKey = "pharmacyVendorId";
+        redirectPath = "/pharmacy-dashboard";
       } else if (formData.type === "Food") {
         tokenKey = "foodtoken";
-        navigate("/food-dashboard");
-      }
+        vendorIdKey = "foodVendorId";
+        redirectPath = "/food-dashboard";
+      } 
 
-      // Save token using dynamic key
+      // Save token exactly as before (stringified object)
       sessionStorage.setItem(tokenKey, JSON.stringify(data.details));
+      
+      // Additionally save vendor ID separately
+      sessionStorage.setItem(vendorIdKey, data.details.vendorId);
+
+      // Save vendor type to session storage for header detection
+      sessionStorage.setItem("currentVendorType", formData.type);
 
       console.log("Login form data:", formData);
+      
+      // Force a refresh of the app state by reloading
+      window.location.href = redirectPath;
     } else {
       toast.error(data.message || "Login failed.");
     }
@@ -87,7 +101,7 @@ const VendorLogin = () => {
                   <label htmlFor="type" className="form-label">
                     Login As:
                   </label>
-                  <div className="dropdown">
+                  <div className="dropdown bg-light text-dark p-0" style={{ borderRadius: "0.25rem", height: "40px" }}>
                     <button
                       className="btn border w-100 d-flex justify-content-between"
                       type="button"

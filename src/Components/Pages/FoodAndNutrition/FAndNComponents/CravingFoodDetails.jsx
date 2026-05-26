@@ -10,6 +10,8 @@ import FilterOffcanvas from "../FAndNComponents/FilterOffcanvas";
 import { MyContext } from '../../../../Context/Context';
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
+import { Carousel as ProductCarousel } from 'react-bootstrap';
+import ProductItemCard from "../FAndNComponents/ProductItemCard";
 
 const CravingFoodDetails = () => {
   const { foodName } = useParams();
@@ -23,6 +25,12 @@ const CravingFoodDetails = () => {
   const [totalPrice, setTotalPrice] = useState(0);
   const [radio, setRadio] = useState(new Date().toLocaleDateString('en-US', { weekday: 'short' }));
   const [specialRequest, setSpecialRequest] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // ✅ STATES for Filters and Sorting
+  const [foodTypeFilter, setFoodTypeFilter] = useState('All');
+  const [sortBy, setSortBy] = useState('Relevance');
+  const [statusFilter, setStatusFilter] = useState('All');
 
   const {
     getCravingMealByFoodName,
@@ -72,7 +80,7 @@ const CravingFoodDetails = () => {
     if (foodName) {
       getCravingMealByFoodName(foodName);
     }
-  }, [foodName]);
+  }, [foodName, getCravingMealByFoodName]);
 
   useEffect(() => {
     if (selectedItem) {
@@ -128,7 +136,7 @@ const CravingFoodDetails = () => {
       const mainItemPayload = {
         vendorId: selectedItem.vendorId,
         quantity: quantity,
-        request: specialRequest
+        request: specialRequest.trim() || undefined
       };
 
       await addToCartCraving(selectedItem._id, mainItemPayload);
@@ -137,7 +145,8 @@ const CravingFoodDetails = () => {
         const addonsPayload = {
           extraItems: selectedAddons.map(addon => ({
             name: addon.name,
-            price: addon.price
+            price: addon.price,
+            _id: addon._id
           }))
         };
 
@@ -145,7 +154,7 @@ const CravingFoodDetails = () => {
       }
 
       setShowModal(false);
-      navigate('/shop/FoodAndNurition/meal/cart');
+      navigate('/shop/FoodAndNurition/cart');
     } catch (error) {
       console.error('Error in add to cart flow:', error);
       
@@ -164,8 +173,63 @@ const CravingFoodDetails = () => {
     }
   };
 
+  // ✅ Filter and sort logic with search
+  const filteredAndSortedCravingItems = [...(cravingMealDetails || [])]
+    .filter(item => {
+      // Search filter
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchesSearch = 
+          item.foodName?.toLowerCase().includes(query) ||
+          item.description?.toLowerCase().includes(query) ||
+          item.foodSubCategory?.toLowerCase().includes(query) ||
+          item.ingredients?.toLowerCase().includes(query);
+        if (!matchesSearch) return false;
+      }
+      
+      // Food Type Filter
+      if (foodTypeFilter !== 'All') {
+        return item.foodCategory?.toLowerCase() === foodTypeFilter.toLowerCase();
+      }
+      
+      // Status Filter
+      if (statusFilter !== 'All') {
+        // Implement status filter logic if needed
+        return true;
+      }
+      
+      return true;
+    })
+    .sort((a, b) => {
+      // Sort By Logic
+      if (sortBy === 'Rating') {
+        return (b.rating || 0) - (a.rating || 0); 
+      } else if (sortBy === 'Cost:LowtoHigh') {
+        const priceA = (parseFloat(a.amount) || 0) * (1 - (parseFloat(a.discountPercentage) || 0) / 100);
+        const priceB = (parseFloat(b.amount) || 0) * (1 - (parseFloat(b.discountPercentage) || 0) / 100);
+        return priceA - priceB;
+      } else if (sortBy === 'Cost:HightoLow') {
+        const priceA = (parseFloat(a.amount) || 0) * (1 - (parseFloat(a.discountPercentage) || 0) / 100);
+        const priceB = (parseFloat(b.amount) || 0) * (1 - (parseFloat(b.discountPercentage) || 0) / 100);
+        return priceB - priceA;
+      }
+      return 0;
+    });
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    // Search is handled in the filter logic above
+  };
+
   if (cravingLoading) {
-    return <div className="text-center py-5">Loading meal details...</div>;
+    return (
+      <div className="container-xl container-fluid text-center py-5">
+        <div className="spinner-border text-danger" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+        <p className="mt-2">Fetching craving food details...</p>
+      </div>
+    );
   }
 
   if (cravingError) {
@@ -173,7 +237,12 @@ const CravingFoodDetails = () => {
   }
 
   if (!cravingMealDetails || cravingMealDetails.length === 0) {
-    return <div className="alert alert-warning m-3">No meal data found for {foodName}!</div>;
+    return (
+      <div className="container-xl container-fluid text-center py-5">
+        <p className="display-6 mb-4 fw-semibold">No meal data found for "{foodName}"!</p>
+        <p>It seems no items match your craving, or there was an issue fetching them.</p>
+      </div>
+    );
   }
 
   return (
@@ -207,121 +276,178 @@ const CravingFoodDetails = () => {
             </div>
             
             <div className="w-100 mb-4">
-              <div className="d-flex flex-wrap gap-1 gap-md-3" role="group" aria-label="Basic example">
-                <button 
-                  className="btn border btn-light rounded-pill px-3 fw-semibold text-nowrap"
-                  data-bs-toggle="offcanvas" 
-                  data-bs-target="#Filter" 
-                  aria-controls="Filter"
-                >
-                  Filter <i className="ri-equalizer-2-line fw-lighter"></i>
-                </button>
-                <FilterOffcanvas mainTitle="Filter" />
-                <button 
-                  className="btn border btn-light rounded-pill px-3 fw-semibold text-nowrap"
-                  data-bs-toggle="dropdown" 
-                  data-bs-auto-close="outside" 
-                  aria-expanded="false"
-                >
-                  Sort By <i className="ri-arrow-down-s-line fw-lighter"></i>
-                </button>
-                <ul className="dropdown-menu activeRedColor px-3" style={{minWidth:"180px"}}>
-                  <div className="form-check mt-2">
-                    <input className="form-check-input" type="radio" name="Sorting" id="Radio1" />
-                    <label className="form-check-label" htmlFor="Radio1">
-                      Relevance(Default)
-                    </label>
+              <div className="d-flex flex-wrap gap-1 gap-md-3 align-items-center" role="group" aria-label="Basic example">
+                {/* Search Form */}
+                <form className="d-flex me-auto" onSubmit={handleSearch}>
+                  <div className="input-group">
+                    <input
+                      type="text"
+                      className="form-control rounded-pill"
+                      placeholder={`Search ${foodName} items...`}
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      style={{ minWidth: '200px' }}
+                    />
+                    <button 
+                      className="btn btn-outline-secondary rounded-pill ms-2"
+                      type="submit"
+                    >
+                      <i className="ri-search-line"></i>
+                    </button>
                   </div>
-                  <div className="form-check mt-2">
-                    <input className="form-check-input" type="radio" name="Sorting" id="Radio2" />
-                    <label className="form-check-label" htmlFor="Radio2">
-                      Rating
-                    </label>
-                  </div>
-                  <div className="form-check mt-2">
-                    <input className="form-check-input" type="radio" name="Sorting" id="Radio3" />
-                    <label className="form-check-label" htmlFor="Radio3">
-                      Cost:LowtoHigh
-                    </label>
-                  </div>
-                  <div className="form-check mt-2">
-                    <input className="form-check-input" type="radio" name="Sorting" id="Radio4" />
-                    <label className="form-check-label" htmlFor="Radio4">
-                      Cost:HightoLow
-                    </label>
-                  </div>
-                </ul>
+                </form>
+                
+                {/* Sort By Dropdown */}
+                <div className="dropdown-ii">
+                  <button 
+                    className="btn border btn-light rounded-pill px-3 fw-semibold text-nowrap dropdown-toggle"
+                    type="button"
+                    id="sortByDropdown" 
+                    data-bs-toggle="dropdown" 
+                    aria-expanded="false"
+                  >
+                    Sort By: {sortBy === 'Cost:LowtoHigh' ? 'Cost: Low to High' : sortBy === 'Cost:HightoLow' ? 'Cost: High to Low' : sortBy} 
+                  </button>
+                  <ul className="dropdown-menu activeRedColor px-3" aria-labelledby="sortByDropdown" style={{minWidth:"180px"}}>
+                    <li>
+                      <div className="form-check mt-2">
+                        <input 
+                          className="form-check-input" 
+                          type="radio" 
+                          name="Sorting" 
+                          id="sortRadio1" 
+                          checked={sortBy === 'Relevance'}
+                          onChange={() => setSortBy('Relevance')}
+                        />
+                        <label className="form-check-label" htmlFor="sortRadio1">
+                          Relevance (Default)
+                        </label>
+                      </div>
+                    </li>
+                    <li>
+                      <div className="form-check mt-2">
+                        <input 
+                          className="form-check-input" 
+                          type="radio" 
+                          name="Sorting" 
+                          id="sortRadio2" 
+                          checked={sortBy === 'Rating'}
+                          onChange={() => setSortBy('Rating')}
+                        />
+                        <label className="form-check-label" htmlFor="sortRadio2">
+                          Rating
+                        </label>
+                      </div>
+                    </li>
+                    <li>
+                      <div className="form-check mt-2">
+                        <input 
+                          className="form-check-input" 
+                          type="radio" 
+                          name="Sorting" 
+                          id="sortRadio3" 
+                          checked={sortBy === 'Cost:LowtoHigh'}
+                          onChange={() => setSortBy('Cost:LowtoHigh')}
+                        />
+                        <label className="form-check-label" htmlFor="sortRadio3">
+                          Cost: Low to High
+                        </label>
+                      </div>
+                    </li>
+                    <li>
+                      <div className="form-check mt-2">
+                        <input 
+                          className="form-check-input" 
+                          type="radio" 
+                          name="Sorting" 
+                          id="sortRadio4" 
+                          checked={sortBy === 'Cost:HightoLow'}
+                          onChange={() => setSortBy('Cost:HightoLow')}
+                        />
+                        <label className="form-check-label" htmlFor="sortRadio4">
+                          Cost: High to Low
+                        </label>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+
+                {/* Food Type Filters */}
                 <div className="w-auto text-nowrap">
-                  <input type="radio" className="btn-check" name="btnradio" id="btnradio1" autoComplete="off" />
-                  <label className="btn btn-outline-light border rounded-pill text-dark" htmlFor="btnradio1">
+                  <input 
+                    type="radio" 
+                    className="btn-check" 
+                    name="foodTypeFilter" 
+                    id="allFilter" 
+                    autoComplete="off" 
+                    checked={foodTypeFilter === 'All'}
+                    onChange={() => setFoodTypeFilter('All')}
+                  />
+                  <label className="btn btn-outline-light border rounded-pill text-dark" htmlFor="allFilter">
+                    All
+                  </label>
+                </div>
+
+                <div className="w-auto text-nowrap">
+                  <input 
+                    type="radio" 
+                    className="btn-check" 
+                    name="foodTypeFilter" 
+                    id="vegFilter" 
+                    autoComplete="off" 
+                    checked={foodTypeFilter === 'Veg'}
+                    onChange={() => setFoodTypeFilter('Veg')}
+                  />
+                  <label className="btn btn-outline-light border rounded-pill text-dark" htmlFor="vegFilter">
                     Veg
-                    <svg width="14" className='ms-2' height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <svg width="14" className='ms-2' height="14" viewBox="0 0 14 14" fill="None" xmlns="http://www.w3.org/2000/svg">
                       <rect x="0.5" y="0.5" width="13" height="13" fill="white" stroke="#199339" />
                       <circle cx="7" cy="7" r="3.5" fill="#199339" />
                     </svg>
                   </label>
                 </div>
+                
                 <div className="w-auto text-nowrap">
-                  <input type="radio" className="btn-check" name="btnradio" id="btnradio2" autoComplete="off" />
-                  <label className="btn btn-outline-light border rounded-pill text-dark" htmlFor="btnradio2">
+                  <input 
+                    type="radio" 
+                    className="btn-check" 
+                    name="foodTypeFilter" 
+                    id="nonVegFilter" 
+                    autoComplete="off" 
+                    checked={foodTypeFilter === 'Non-veg'}
+                    onChange={() => setFoodTypeFilter('Non-veg')}
+                  />
+                  <label className="btn btn-outline-light border rounded-pill text-dark" htmlFor="nonVegFilter">
                     Non-Veg
-                    <svg width="14" className='ms-2' height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <svg width="14" className='ms-2' height="14" viewBox="0 0 14 14" fill="None" xmlns="http://www.w3.org/2000/svg">
                       <rect x="0.5" y="0.5" width="13" height="13" fill="white" stroke="#EB3239" />
                       <path d="M7 3.5L10.7889 10.0625H3.21114L7 3.5Z" fill="#EB3239" />
                     </svg>
-                  </label>
-                </div>
-                <div className="w-auto text-nowrap">
-                  <input type="radio" className="btn-check" name="btnradio" id="btnradio3" autoComplete="off" />
-                  <label className="btn btn-outline-light border rounded-pill text-dark" htmlFor="btnradio3">
-                    Fast Delivery
                   </label>
                 </div>
               </div>
             </div>
             
             <h4 className="mb-3">Meal Options for {foodName}</h4>
-            <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-              {cravingMealDetails.map((item) => (
-                <div className="col" key={item._id}>
-                  <div className="card h-100 cursor-pointer" onClick={() => handleItemClick(item)}>
-                    <img 
-                      src={item.image?.[0] ? `${process.env.REACT_APP_API_URL}${item.image[0]}` : FoodAndNurtImg2} 
-                      className="card-img-top object-fit-cover" 
-                      style={{height: "200px"}} 
-                      alt={item.foodName} 
-                    />
-                    <div className="card-body">
-                      <div className="d-flex justify-content-between align-items-start mb-2">
-                        <h5 className="card-title mb-0">{item.foodName}</h5>
-                        <span className={`badge ${item.foodCategory === 'Veg' ? 'bg-success' : 'bg-danger'}`}>
-                          {item.foodSubCategory}
-                        </span>
-                      </div>
-                      <div className="d-flex justify-content-between align-items-center mb-3">
-                        <span className="fw-bold">Price:</span>
-                        <span className="fw-bold">
-                          ₹{item.amount}
-                          {item.discountPercentage > 0 && (
-                            <span className="text-success ms-2 fs-6">
-                              ({item.discountPercentage}% off)
-                            </span>
-                          )}
-                        </span>
-                      </div>
-                      <button 
-                        className="btn btn-primary w-100"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleItemClick(item);
-                        }}
-                      >
-                        Add to Cart
-                      </button>
-                    </div>
-                  </div>
+            {searchQuery && (
+              <p className="text-muted mb-3">
+                Showing results for "{searchQuery}" ({filteredAndSortedCravingItems.length} items found)
+              </p>
+            )}
+            <div className="ProductCardItemsWrapper row g-4">
+              {filteredAndSortedCravingItems.length > 0 ? (
+                filteredAndSortedCravingItems.map((product) => (
+                  <ProductItemCard key={product._id} Data={product} onItemClick={handleItemClick} />
+                ))
+              ) : (
+                <div className="col-12 text-center py-5">
+                  <p className="text-muted">
+                    No {foodTypeFilter !== 'All' ? foodTypeFilter.toLowerCase() : ''} items 
+                    {searchQuery ? ` matching "${searchQuery}"` : ''} 
+                    found for "{foodName}" with the current filters.
+                  </p>
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </div>
@@ -331,16 +457,33 @@ const CravingFoodDetails = () => {
         {selectedItem && (
           <>
             <Modal.Header closeButton>
-              <Modal.Title>{selectedItem.foodName}</Modal.Title>
+              <Modal.Title>{selectedItem.foodName} {selectedItem.foodSubCategory} </Modal.Title>
             </Modal.Header>
             <Modal.Body>
+              {authError && <div className="alert alert-danger">{authError}</div>}
               <div className="row">
                 <div className="col-md-6 mb-3 mb-md-0">
-                  <img
-                    src={selectedItem.image?.[0] ? `${process.env.REACT_APP_API_URL}${selectedItem.image[0]}` : FoodAndNurtImg3}
-                    className="img-fluid rounded"
-                    alt={selectedItem.foodName}
-                  />
+                  {selectedItem.image && selectedItem.image.length > 0 ? (
+                    <ProductCarousel interval={null} variant="dark">
+                      {selectedItem.image.map((imgUrl, index) => (
+                        <ProductCarousel.Item key={index}>
+                          <img
+                            className="d-block w-100 rounded"
+                            style={{ height: '350px', objectFit: 'cover' }}
+                            src={`${process.env.REACT_APP_API_URL}${imgUrl}`}
+                            alt={`${selectedItem.foodName} - slide ${index + 1}`}
+                          />
+                        </ProductCarousel.Item>
+                      ))}
+                    </ProductCarousel>
+                  ) : (
+                    <img
+                      src={FoodAndNurtImg3}
+                      className="img-fluid rounded"
+                      style={{ height: '350px', objectFit: 'cover', width: '100%' }}
+                      alt="No image available"
+                    />
+                  )}
                 </div>
                 <div className="col-md-6">
                   <div className="d-flex align-items-center gap-2 mb-2">
@@ -352,15 +495,23 @@ const CravingFoodDetails = () => {
                   </div>
                   
                   <h4 className="mb-2">
-                    ₹{selectedItem.amount}
-                    {selectedItem.discountPercentage > 0 && (
-                      <span className="text-success ms-2 fs-6">
-                        ({selectedItem.discountPercentage}% off)
-                      </span>
+                    {selectedItem.discountPercentage > 0 ? (
+                      <>
+                        <span className="text-decoration-line-through text-muted me-2">
+                          ₹{selectedItem.amount}
+                        </span>
+                        ₹{(selectedItem.amount - (selectedItem.amount * selectedItem.discountPercentage / 100)).toFixed(2)}
+                        <span className="text-success ms-2 fs-6">
+                          ({selectedItem.discountPercentage}% off)
+                        </span>
+                      </>
+                    ) : (
+                      <>₹{selectedItem.amount}</>
                     )}
                   </h4>
                   <p className="text-muted mb-2">
-                    {selectedItem.calorie} kcal | {selectedItem.foodType}
+                    {selectedItem.calorie} calorie 
+                    <p>{selectedItem.ingredients}</p>
                   </p>
                   <p className="mb-3">{selectedItem.description}</p>
                   
@@ -402,7 +553,7 @@ const CravingFoodDetails = () => {
                     </div>
                   </div>
                   
-                  {selectedItem.addons?.length > 0 && (
+                  {selectedItem.addons && Array.isArray(selectedItem.addons) && selectedItem.addons.length > 0 && (
                     <div className="mb-4">
                       <h6>Addons:</h6>
                       <div className="border rounded overflow-auto" style={{maxHeight: "200px"}}>
@@ -427,7 +578,7 @@ const CravingFoodDetails = () => {
                                     {addon.name} - ₹{addon.price}
                                     {addon.calorie && (
                                       <span className="text-muted ms-2 fs-7">
-                                        ({addon.calorie} kcal)
+                                        ({addon.calorie} calorie)
                                       </span>
                                     )}
                                   </label>
@@ -445,11 +596,11 @@ const CravingFoodDetails = () => {
             <Modal.Footer className="d-flex justify-content-between">
               <h5 className="mb-0">Total: ₹{totalPrice.toFixed(2)}</h5>
               <div>
-                <Button variant="secondary" onClick={() => setShowModal(false)} className="me-2">
+                <Button variant="secondary border-0" onClick={() => setShowModal(false)} className="me-2">
                   Close
                 </Button>
                 <Button 
-                  variant="primary" 
+                  variant="primary bg-danger border-0" 
                   onClick={handleAddToCart}
                   disabled={loading}
                 >

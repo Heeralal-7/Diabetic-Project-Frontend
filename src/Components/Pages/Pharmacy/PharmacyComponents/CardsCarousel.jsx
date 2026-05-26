@@ -2,20 +2,30 @@ import React from "react";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+import PharmacyItemCard from "./PharmacyItemCard";
 import { Link } from "react-router-dom";
-// import OfferCards from "./OfferCards";
 
-const CardsCarousel = ({ mainTittle, slideData, autoplay, loop, initialSlide,noOfSlides}) => {
-  const setting = {
-    className: "FoodAndNutritionOfferSlider",
+const CardsCarousel = ({ 
+  mainTittle, 
+  items = [], 
+  autoplay = false, 
+  loop = false, 
+  initialSlide = 0,
+  noOfSlides = [4, 3, 2, 2, 1, 1],
+  isMedicine = false,
+  showSeeAll = true
+}) => {
+  if (!Array.isArray(items)) {
+    console.warn('CardsCarousel: items prop is not an array', items);
+    return null;
+  }
+
+  const settings = {
     dots: false,
-    infinite: loop,
-    centerPadding: "60px",
+    infinite: false,
     slidesToShow: noOfSlides[0],
-    slidesToScroll: 2,
-    autoplay: autoplay,
+    slidesToScroll: 1,
     speed: 500,
-    autoplaySpeed: 3000,
     cssEase: "linear",
     pauseOnHover: true,
     initialSlide: initialSlide,
@@ -23,109 +33,78 @@ const CardsCarousel = ({ mainTittle, slideData, autoplay, loop, initialSlide,noO
       {
         breakpoint: 1200,
         settings: {
-          slidesToShow: noOfSlides[1],
-        },
+          slidesToShow: noOfSlides[3],
+          slidesToScroll: 1
+        }
       },
       {
-        breakpoint: 1024,
+        breakpoint: 992,
         settings: {
           slidesToShow: noOfSlides[2],
-        },
+          slidesToScroll: 1
+        }
       },
       {
-        breakpoint: 600,
+        breakpoint: 768,
         settings: {
           slidesToShow: noOfSlides[3],
-        },
+          slidesToScroll: 1
+        }
       },
       {
-        breakpoint: 480,
+        breakpoint: 576,
         settings: {
           slidesToShow: noOfSlides[4],
-          slidesToScroll: 1,
-        },
+          slidesToScroll: 1
+        }
       },
       {
-        breakpoint: 380,
+        breakpoint: 400,
         settings: {
           slidesToShow: noOfSlides[5],
-          slidesToScroll: 1,
-        },
-      },
-    ],
+          slidesToScroll: 1
+        }
+      }
+    ]
   };
+
+  // Determine the "See All" link based on content
+  const getSeeAllLink = () => {
+    if (mainTittle.includes("Popular Medicines")) {
+      return "/pharmacy/popular-medicines";
+    } else if (mainTittle.includes("Popular Products")) {
+      return "/pharmacy/popular-products";
+    }
+    return isMedicine ? "/pharmacy/medicines" : "/pharmacy/products";
+  };
+
   return (
-    <>
-      <h1 className="display-6 mb-0 d-flex align-items-center justify-content-between fw-semibold">
-        <span>{mainTittle}</span>
-        <span>See All</span>
-      </h1>
-      <div className="slider-container py-4">
-        <Slider {...setting} style={{height: "450px" }}>
-          {slideData.map((offer, index) => (
-             <div className="card shadow border rounded-4 overflow-hidden w-95" key={index}>
-             <div className="position-relative">
-               <img
-                 src={offer?.image}
-                 className="card-img-top rounded-top-4" style={{height: '200px' }} alt="offer1" />
-                 <div className="position-absolute top-0 m-2">
-                   <div className="badge bg-mainRed p-2">
-                     {offer?.badge}
-                   </div>
-                 </div>
-             </div>
-             <div className="card-body text-start">
-               <div className="d-flex flex-nowrap justify-content-between">
-                 <div className="w-auto">
-                   <Link to="/Pharmacy/shop/Product"
-                     className="h5 card-title">
-                     <span className="twoLineTrunc text-start">{offer?.medName}</span>
-                   </Link>
-                   <p className="card-text text-secondary lh-sm mb-1 text-truncate w-90">
-                   {offer?.medQty}
-                   </p>
-                   <p className="d-flex gap-2 align-items-center card-text text-secondary lh-sm mb-2">
-                     <span className="badge bg-success">
-                       <i className="fa-solid fa-star fs-Xsmall"></i> {offer?.avgRating}
-                     </span>
-                     <span className="fs-small fw-semibold">
-                     (785 ratings)
-                     </span>
-                   </p>
-                   <div className="">
-                     <span className="fs-Xsmall fw-bolder rounded-start-pill text-mainBlue" style={{padding: '2px 3px', background: 'linear-gradient(270deg, rgba(255, 255, 255, 0) 33%, rgba(61, 63, 150, 0.5) 100%)'}}>
-                       <svg width={16} className="me-1" height={16} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx={8} cy={8} r={8} fill="#3D3F96" />
-                       <path d="M10.2495 8.50657L9.96054 7.62915C9.95146 7.60204 9.93698 7.57723 9.91804 7.55636C9.90504 7.75882 9.74807 7.9243 9.54868 7.93495C9.50061 7.93749 9.45249 7.93879 9.40436 7.93885H9.39995C9.27337 7.93896 9.14696 7.92939 9.02173 7.9102C9.02105 7.9364 9.02526 7.96248 9.0341 7.98701C9.05239 8.03742 9.08916 8.07819 9.13633 8.10037C9.18349 8.12255 9.23718 8.12431 9.28559 8.10527V8.10519L9.65659 7.95917L10.537 10.6327C10.6894 10.4592 10.8819 10.3274 11.1017 10.2498C11.2421 10.2001 11.3894 10.1747 11.5377 10.1746C11.766 10.1746 11.9906 10.2345 12.1908 10.3489C12.3909 10.4633 12.5601 10.6284 12.6827 10.8289C12.8287 10.8217 12.8661 10.7327 12.6315 10.4144C12.2533 9.90128 11.7273 9.8018 11.3573 9.80696C11.3341 9.74178 11.3101 9.67367 11.2851 9.60166C11.0584 8.94892 10.5492 8.63804 10.2495 8.50657ZM8.48041 4.48076C8.48041 4.48349 8.48049 4.48629 8.48072 4.48942C8.49072 4.68603 8.53369 4.82298 8.53431 4.95884C8.53447 5.0289 8.52147 5.09883 8.48486 5.16959C8.48118 5.17662 8.47561 5.18239 8.46882 5.18617C8.36142 5.24599 8.24601 5.26476 8.12862 5.26476C8.02605 5.26468 7.92134 5.25074 7.81565 5.23636C7.71703 5.22298 7.62996 5.20185 7.55229 5.17308C7.67565 5.33965 7.85062 5.45657 8.04744 5.50396C8.51967 5.61848 8.99156 5.31267 9.10166 4.82099C9.14865 4.61203 9.12323 4.39251 9.02988 4.20117C8.87268 4.22125 8.66107 4.26201 8.55429 4.34788C8.50555 4.38685 8.48084 4.42781 8.48041 4.48076ZM7.08626 6.39516L7.08603 6.39459L7.08435 6.39085C7.04114 6.29206 7.03755 6.18161 7.07412 6.08001C7.11069 5.97841 7.18317 5.89766 7.278 5.8528C7.32865 5.82862 7.38371 5.81615 7.43942 5.81622C7.59214 5.81622 7.73162 5.90969 7.79481 6.05437L7.79672 6.05839C7.79961 6.06453 7.80441 6.0744 7.81112 6.08745C7.83233 6.12867 7.85513 6.16899 7.87946 6.2083C7.92856 6.28796 7.98242 6.36432 8.04073 6.43694C8.11109 6.05286 7.96279 5.62925 7.6533 5.54899C7.32012 5.46247 6.83715 5.65091 6.64064 6.2459C6.37506 7.06578 6.31796 7.5994 6.41889 8.50218C6.51649 9.0252 6.81127 9.17292 7.10827 9.20876C7.1096 9.20901 7.11085 9.20941 7.11218 9.20962L8.59215 9.44922L9.14654 10.9124C9.22221 11.1122 9.406 11.2341 9.60047 11.2341C9.66003 11.2341 9.72064 11.2227 9.77941 11.1986C10.03 11.0956 10.153 10.8006 10.0542 10.5397L9.39718 8.80571C9.36585 8.72334 9.31442 8.65091 9.24798 8.59557C9.18154 8.54023 9.10239 8.50389 9.01833 8.49015L7.79212 8.29155C7.78576 7.99193 7.81745 7.68161 7.86276 7.38597C7.77927 7.31759 7.69975 7.24413 7.62461 7.16595C7.29514 6.82438 7.12931 6.48964 7.08626 6.39516Z" fill="white" />
-                       <path d="M9.40031 7.85744H9.40472C9.45112 7.85744 9.49788 7.8561 9.54502 7.85362C9.62671 7.84783 9.70294 7.80885 9.75729 7.7451C9.81165 7.68134 9.83978 7.59791 9.83562 7.51276C9.83147 7.42762 9.79536 7.34759 9.73508 7.2899C9.67479 7.23221 9.59516 7.20148 9.51333 7.20434C9.47598 7.20633 9.43981 7.20727 9.40472 7.20727C8.80654 7.20593 8.40018 6.93292 8.11996 6.64658C8.00456 6.52703 7.90202 6.39474 7.81414 6.25206C7.78875 6.2109 7.76489 6.16874 7.7426 6.12568C7.73716 6.11514 7.73192 6.10449 7.72687 6.09373L7.7241 6.08792C7.70713 6.04906 7.68301 6.01406 7.65304 5.98493C7.62307 5.95579 7.58789 5.93309 7.54949 5.91811C7.5111 5.90314 7.47025 5.89618 7.42927 5.89765C7.38829 5.89912 7.348 5.90898 7.31068 5.92667C7.27336 5.94433 7.23974 5.96947 7.21175 6.00067C7.18376 6.03186 7.16195 6.06849 7.14756 6.10846C7.13317 6.14844 7.12649 6.19097 7.12789 6.23363C7.1293 6.2763 7.13876 6.31826 7.15574 6.35711C7.16612 6.3795 7.32317 6.73838 7.68028 7.10831C8.03352 7.47613 8.6082 7.8574 9.40031 7.85744ZM6.0817 8.96468V6.43412C6.0817 6.37661 6.05976 6.32145 6.0207 6.28077C5.98165 6.2401 5.92868 6.21724 5.87344 6.21723H3.40845C3.35321 6.21726 3.30024 6.24012 3.26119 6.2808C3.22213 6.32148 3.2002 6.37664 3.2002 6.43416V8.96472C3.20019 8.9932 3.20557 9.0214 3.21604 9.04771C3.2265 9.07403 3.24184 9.09794 3.26118 9.11808C3.28052 9.13822 3.30348 9.15419 3.32874 9.16509C3.35401 9.17599 3.3811 9.18161 3.40845 9.18161H5.87344C5.9008 9.18161 5.92789 9.17599 5.95316 9.16509C5.97843 9.15419 6.00139 9.13821 6.02073 9.11806C6.04007 9.09792 6.05541 9.074 6.06587 9.04769C6.07633 9.02137 6.08171 8.99316 6.0817 8.96468ZM6.8589 11.2C6.65267 10.5667 5.9926 10.2274 5.38439 10.4421C4.77626 10.6568 4.45037 11.3443 4.6566 11.9775C4.86278 12.6107 5.5229 12.95 6.13111 12.7354C6.73924 12.5206 7.06508 11.8332 6.8589 11.2ZM5.90521 12.0417C5.66496 12.1266 5.4041 11.9924 5.32268 11.7423C5.24127 11.4921 5.37002 11.2205 5.6102 11.1357C5.85046 11.0509 6.11132 11.185 6.19273 11.4351C6.27426 11.6853 6.14551 11.9568 5.90521 12.0417ZM10.9342 8.43825C11.2628 8.43825 11.2628 7.19877 10.9342 7.19877C10.6055 7.19877 10.339 7.47621 10.339 7.81851C10.339 8.16081 10.6055 8.43825 10.9342 8.43825Z" fill="white" />
-                       <path d="M10.1951 11.3765H7.70676C7.49164 10.9245 7.41764 10.4632 7.39313 10.1631C7.45702 10.1427 7.50378 10.0815 7.50378 10.0083V9.56129C7.50378 9.51818 7.48733 9.47683 7.45805 9.44635C7.42877 9.41586 7.38907 9.39874 7.34766 9.39874H4.1669C4.12549 9.39874 4.08579 9.41586 4.05651 9.44635C4.02723 9.47683 4.01079 9.51818 4.01079 9.56129V10.0083C4.01079 10.0514 4.02723 10.0928 4.05651 10.1233C4.08579 10.1537 4.12549 10.1709 4.1669 10.1709H4.18411C4.01457 10.604 3.75293 11.3549 3.75293 11.8641H4.42585C4.36731 11.5601 4.40594 11.2461 4.53996 10.9634C4.70056 10.6247 4.97813 10.3713 5.32157 10.2502C5.462 10.2004 5.60933 10.175 5.75767 10.1749C6.04152 10.1749 6.31824 10.2675 6.5489 10.4397C6.77956 10.612 6.95255 10.8552 7.04352 11.1352C7.12011 11.3698 7.13574 11.6212 7.08883 11.8641H10.2062C10.1751 11.7035 10.1713 11.5385 10.1951 11.3765ZM11.1645 10.4425C10.5564 10.6572 10.2305 11.3446 10.4368 11.9779C10.6429 12.6111 11.3031 12.9504 11.9113 12.7357C12.5194 12.521 12.8453 11.8336 12.6391 11.2004C12.4329 10.5671 11.7728 10.2278 11.1645 10.4425ZM11.6854 12.0421C11.4452 12.127 11.1843 11.9928 11.1029 11.7427C11.0215 11.4926 11.1502 11.2209 11.3904 11.1362C11.6307 11.0513 11.8915 11.1854 11.9729 11.4355C12.0544 11.6857 11.9257 11.9573 11.6854 12.0421ZM9.12729 4.1092C9.11081 3.98737 9.07391 3.86951 9.01829 3.76097C8.86916 3.46963 8.59222 3.25526 8.25397 3.20918C8.20995 3.20318 8.16559 3.20018 8.1212 3.2002H8.12104C7.61938 3.2002 7.18304 3.58785 7.11639 4.12005C7.10276 4.22737 7.10516 4.33624 7.12349 4.4428C7.16201 4.66797 7.22711 4.82968 7.33498 4.94265C7.44277 5.05554 7.59721 5.12479 7.82599 5.15608C7.93144 5.17047 8.03323 5.18384 8.12881 5.18372C8.23442 5.18372 8.33187 5.16767 8.42159 5.12057C8.44751 5.06619 8.45629 5.0158 8.45644 4.95915C8.45707 4.84292 8.4141 4.70065 8.40302 4.49437C8.40274 4.48994 8.40258 4.48551 8.40255 4.48108C8.40223 4.3974 8.4468 4.33019 8.50749 4.28333C8.56845 4.23562 8.6471 4.20287 8.72999 4.17816C8.8733 4.13573 9.03089 4.1185 9.12729 4.1092Z" fill="white" />
-                       </svg>
-                       <span>FREE DELIVERY</span>
-                     </span>
-                   </div>
-                   <div className="d-flex align-items-center gap-2 text-nowrap">
-                     <span className="fw-bold">
-                     ₹{offer?.price}
-                     </span>
-                     <span className="fs-7">
-                      <sub><s> ₹{offer?.oldPrice}</s></sub>
-                     </span>
-                     <span className="text-success fw-bold">
-                     {offer?.offer}% off
-                     </span>
-                   </div>
-                 </div>
-               </div>
-             </div>
-           <div className="text-center mb-3">
-             <Link to='/Pharmacy/shop/Cart' className="btn text-danger border-RedLight btn-mainLightRed w-80">Add to Cart</Link>
-           </div>
-           </div>
-            
+    <div className="my-4">
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h2 className="mb-0">{mainTittle}</h2>
+        {showSeeAll && items.length > 0 && (
+          <Link to={getSeeAllLink()} className="btn btn-outline-primary rounded-pill px-4 shadow-sm hover-elevate">
+            See All <i className="ri-arrow-right-line ms-1"></i>
+          </Link>
+         
+        )}
+      </div>
+      
+      {items.length === 0 ? (
+        <div className="alert alert-info">No items to display</div>
+      ) : (
+        <Slider {...settings}>
+          {items.map((item) => (
+            <div key={item._id} className="px-1">
+              <div className="mx-1">
+                <PharmacyItemCard item={item} isMedicine={isMedicine} />
+              </div>
+            </div>
           ))}
         </Slider>
-      </div>
-    </>
+      )}
+    </div>
   );
 };
 
-export default CardsCarousel;
+export default React.memo(CardsCarousel);

@@ -1,0 +1,68 @@
+/* components/Science/SciencePage.css */
+.cardsCont {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  padding: 20px 0;
+}
+
+.bg-imagejkhndwyh {
+  background: linear-gradient(135deg, #1a5276 0%, #2980b9 100%);
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+}
+
+.bg-uawhiqwjhihahwe {
+  background: linear-gradient(135deg, #2980b9 0%, #3498db 100%);
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+}
+
+.text-mainBlue {
+  color: #1a5276;
+}
+
+.rounded-5 {
+  border-radius: 1rem !important;
+}
+
+.card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .cardsCont {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  
+  .bg-imagejkhndwyh {
+    min-height: 300px;
+  }
+  
+  .display-4 {
+    font-size: 2.5rem;
+  }
+  
+  .display-5 {
+    font-size: 2rem;
+  }
+}
+
+/* Team card gradient */
+.team-card-gradient {
+  background: linear-gradient(to right, #33ccff 100%, #20b0f7 100%);
+}
+
+/* Statistics section background */
+.bg-fluid.bg-info {
+  background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%) !important;
+}

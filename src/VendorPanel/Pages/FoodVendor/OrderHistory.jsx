@@ -10,13 +10,33 @@ const OrderHistory = ({ refreshKey, onRefresh }) => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
 
+  // Helper function to calculate discounted price per item
+  const calculateDiscountedPrice = (item) => {
+    const originalAmount = parseFloat(item.FoodItem?.amount || '0');
+    const discountPercentage = parseFloat(item.FoodItem?.discountPercentage || '0');
+    
+    if (discountPercentage > 0 && originalAmount > 0) {
+      const discountedAmount = originalAmount * (1 - discountPercentage / 100);
+      return discountedAmount.toFixed(2); // Format to 2 decimal places
+    }
+    return originalAmount.toFixed(2); // No discount or invalid values, return original
+  };
+
   const fetchOrderHistory = async () => {
     try {
       setLocalLoading(true);
       setApiError(null);
       const result = await getVendorOrderHistory();
       if (result.success === 1) {
-        setOrders(result.details);
+        // Process orders to calculate discounted prices for each item
+        const processedOrders = result.details.map(order => {
+          const processedItems = order.items.map(item => ({
+            ...item,
+            displayPrice: calculateDiscountedPrice(item) // Add calculated price for display
+          }));
+          return { ...order, items: processedItems };
+        });
+        setOrders(processedOrders || []);
       } else {
         setApiError(result.message || "Failed to fetch order history");
       }
@@ -123,23 +143,22 @@ const OrderHistory = ({ refreshKey, onRefresh }) => {
                     {order.userId?.phone && <div className="text-muted small">{order.userId.phone}</div>}
                   </td>
                   <td>
-                    {order.items?.map((item, index) => (
-                      <div key={`${order._id}-item-${index}`} className="mb-2">
+                    {/* --- MODIFIED CODE START --- */}
+                    {order.items.length > 0 ? (
+                      <>
                         <div>
-                          <strong>{item.FoodItem?.foodName || 'Unknown Item'}</strong> (x{item.quantity})
+                          <strong>{order.items[0].FoodItem?.foodName || 'Unknown Item'} {order.items[0].FoodItem?.foodSubCategory || ''}</strong> (x{order.items[0].quantity})
                         </div>
-                        {item.extraItems?.length > 0 && (
-                          <div className="text-muted small">
-                            Extras: {item.extraItems.map(extra => `${extra.name} (₹${extra.price})`).join(', ')}
-                          </div>
+                        {order.items.length > 1 && (
+                          <Badge bg="secondary" className="mt-1">
+                            +{order.items.length - 1} more items
+                          </Badge>
                         )}
-                        {item.request && (
-                          <div className="text-muted small">
-                            Note: {item.request}
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                      </>
+                    ) : (
+                      'No items'
+                    )}
+                    {/* --- MODIFIED CODE END --- */}
                   </td>
                   <td>₹{order.price || '0.00'}</td>
                   <td>
@@ -200,12 +219,14 @@ const OrderHistory = ({ refreshKey, onRefresh }) => {
 
               <div className="mb-4">
                 <h5>Order Items</h5>
-                <table className="table">
+                <Table striped bordered hover responsive size="sm"> {/* Changed to Bootstrap Table */}
                   <thead>
                     <tr>
                       <th>Item</th>
                       <th>Quantity</th>
-                      <th>Price</th>
+                      <th>Original Price (each)</th>
+                      <th>Discount (%)</th>
+                      <th>Final Price (each)</th>
                       <th>Extras</th>
                     </tr>
                   </thead>
@@ -213,14 +234,16 @@ const OrderHistory = ({ refreshKey, onRefresh }) => {
                     {selectedOrder.items?.map((item, index) => (
                       <tr key={`detail-${index}`}>
                         <td>
-                          <div>{item.FoodItem?.foodName || 'Unknown Item'}</div>
-                          <small className="text-muted">{item.FoodItem?.foodSubCategory || ''}</small>
+                          <div>{item.FoodItem?.foodName || 'Unknown Item'} {item.FoodItem?.foodSubCategory || ''}</div>
+                          {/* <small className="text-muted"></small> */}
                         </td>
                         <td>{item.quantity}</td>
-                        <td>₹{item.finalprice || item.price || '0.00'}</td>
+                        <td>₹{parseFloat(item.FoodItem?.amount || '0').toFixed(2)}</td>
+                        <td>{item.FoodItem?.discountPercentage || '0'}%</td>
+                        <td>₹{item.displayPrice}</td> {/* Display calculated price */}
                         <td>
                           {item.extraItems?.length > 0 ? (
-                            <ul className="list-unstyled">
+                            <ul className="list-unstyled mb-0">
                               {item.extraItems.map((extra, i) => (
                                 <li key={`extra-${i}`}>
                                   {extra.name} (₹{extra.price || '0.00'})
@@ -232,7 +255,7 @@ const OrderHistory = ({ refreshKey, onRefresh }) => {
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                </Table>
               </div>
 
               <div className="row">
