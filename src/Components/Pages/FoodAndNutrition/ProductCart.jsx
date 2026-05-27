@@ -31,7 +31,7 @@ const ProductCart = () => {
   const [deliveryChargesData, setDeliveryChargesData] = useState(null);
   const [calculatingCharges, setCalculatingCharges] = useState(false);
   
-  // ✅ STATE FOR MEMBERSHIP
+  // STATE FOR MEMBERSHIP
   const [membershipData, setMembershipData] = useState({
     hasActiveMembership: false,
     isFreeDelivery: false,
@@ -42,10 +42,10 @@ const ProductCart = () => {
   const [apiUrl] = useState(process.env.REACT_APP_API_URL || "http://localhost:5000");
   const [initialized, setInitialized] = useState(false);
 
-  // ✅ NEW: State for tracking if rapid delivery should be free
+  // NEW: State for tracking if rapid delivery should be free
   const [isRapidDeliveryFree, setIsRapidDeliveryFree] = useState(false);
 
-  // ✅ Refs to prevent multiple calculations
+  // Refs to prevent multiple calculations
   const isCalculatingRef = useRef(false);
   const lastCalculationRef = useRef({
     key: '',
@@ -71,7 +71,7 @@ const ProductCart = () => {
     calculateFoodDeliveryCharges: calculateDeliveryChargesAPI
   } = useContext(MyContext);
 
-  // ✅ Check membership for free delivery
+  // Check membership for free delivery
   const checkMembershipForDelivery = useCallback(async () => {
     try {
       setCheckingMembership(true);
@@ -102,16 +102,21 @@ const ProductCart = () => {
 
       console.log("Membership API Response:", response.data);
       
-      if (response.data.success === 1) {
-        setMembershipData(response.data.data);
-        console.log('✅ Membership delivery check successful:', response.data.data);
+      if (response.data && response.data.success === 1) {
+        setMembershipData(response.data.data || {
+          hasActiveMembership: false,
+          isFreeDelivery: false,
+          remainingDeliveries: 0,
+          message: ""
+        });
+        console.log('Membership delivery check successful:', response.data.data);
       } else {
-        console.log('Membership API returned success 0:', response.data.message);
+        console.log('Membership API returned success 0:', response.data?.message);
         setMembershipData({
           hasActiveMembership: false,
           isFreeDelivery: false,
           remainingDeliveries: 0,
-          message: response.data.message || "No active membership"
+          message: response.data?.message || "No active membership"
         });
       }
     } catch (error) {
@@ -127,35 +132,30 @@ const ProductCart = () => {
     }
   }, [apiUrl]);
 
-  // ✅ LOGIC: Check if rapid delivery should be free based on membership
+  // LOGIC: Check if rapid delivery should be free based on membership
   const checkRapidDeliveryFreeEligibility = useCallback(() => {
-    // Rapid delivery is free when:
-    // 1. User has active membership
-    // 2. User has remaining free deliveries
-    // 3. Membership is currently providing free delivery
-    
-    const shouldBeFree = (
-      membershipData.hasActiveMembership &&
-      membershipData.isFreeDelivery &&
-      membershipData.remainingDeliveries > 0
+    const shouldBeFree = !!(
+      membershipData?.hasActiveMembership &&
+      membershipData?.isFreeDelivery &&
+      membershipData?.remainingDeliveries > 0
     );
     
     setIsRapidDeliveryFree(shouldBeFree);
     
     if (shouldBeFree) {
-      console.log('✅ Rapid delivery is FREE due to active membership with remaining deliveries');
+      console.log('Rapid delivery is FREE due to active membership with remaining deliveries');
     } else {
-      console.log('ℹ️ Rapid delivery is NOT free:', {
-        hasActiveMembership: membershipData.hasActiveMembership,
-        isFreeDelivery: membershipData.isFreeDelivery,
-        remainingDeliveries: membershipData.remainingDeliveries
+      console.log('Rapid delivery is NOT free:', {
+        hasActiveMembership: membershipData?.hasActiveMembership,
+        isFreeDelivery: membershipData?.isFreeDelivery,
+        remainingDeliveries: membershipData?.remainingDeliveries
       });
     }
     
     return shouldBeFree;
   }, [membershipData]);
 
-  // ✅ Get user's current location
+  // Get user's current location
   const getCurrentLocation = useCallback(() => {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
@@ -207,7 +207,7 @@ const ProductCart = () => {
     });
   }, []);
 
-  // ✅ UPDATED: Calculate delivery charges with extra distance charges per km
+  // Calculate delivery charges with extra distance charges per km
   const calculateDeliveryCharges = useCallback(async (subtotal, vendorLocation, userLocation, isRapid, currentMembershipData) => {
     if (!vendorLocation || !userLocation || !foodDeliveryCharges) {
       console.log("Missing data for delivery calculation");
@@ -229,11 +229,10 @@ const ProductCart = () => {
       };
     }
 
-    // ✅ Check if rapid delivery should be free
     const isRapidFree = checkRapidDeliveryFreeEligibility();
     
-    // ✅ Prevent duplicate calculations
-    const currentCalcKey = `${subtotal}-${userLocation.latitude}-${userLocation.longitude}-${isRapid}-${currentMembershipData.isFreeDelivery}-${isRapidFree}`;
+    // Prevent duplicate calculations
+    const currentCalcKey = `${subtotal}-${userLocation.latitude}-${userLocation.longitude}-${isRapid}-${currentMembershipData?.isFreeDelivery}-${isRapidFree}`;
     if (isCalculatingRef.current) {
       console.log("Already calculating, skipping...");
       return;
@@ -272,94 +271,69 @@ const ProductCart = () => {
       const result = await calculateDeliveryChargesAPI(calculationData);
       console.log("Delivery charges API result:", result);
       
-      // ✅ NEW: Calculate extra distance charges per kilometer if not provided by API
       let finalResult = { ...result };
       
       // If API didn't calculate extra charges, calculate them manually
-      if (result.extraDistance > 0 && (result.extraCharges === 0 || !result.extraCharges)) {
+      if (result && result.extraDistance > 0 && (result.extraCharges === 0 || !result.extraCharges)) {
         const perKmCharge = foodDeliveryCharges.perKmCharge || 5;
-        const extraCharges = Math.round(result.extraDistance * perKmCharge * 100) / 100; // Round to 2 decimal places
-        console.log(`📏 Manual extra charges calculation: ${result.extraDistance} km × ₹${perKmCharge}/km = ₹${extraCharges}`);
+        const extraCharges = Math.round(result.extraDistance * perKmCharge * 100) / 100;
+        console.log(`Manual extra charges calculation: ${result.extraDistance} km × ₹${perKmCharge}/km = ₹${extraCharges}`);
         finalResult.extraCharges = extraCharges;
       }
       
-      // ✅ Apply membership free delivery if eligible
-      
-      // Track what discounts are applied
       let membershipDiscount = 0;
       let rapidDiscount = 0;
       let extraChargesAfterMembership = finalResult.extraCharges || 0;
       
       // 1. Apply membership free delivery (base delivery)
-      if (currentMembershipData.isFreeDelivery && currentMembershipData.remainingDeliveries > 0) {
-        console.log('✅ Applying membership free delivery. Base delivery:', result.baseDelivery);
+      if (currentMembershipData?.isFreeDelivery && currentMembershipData?.remainingDeliveries > 0) {
+        console.log('Applying membership free delivery. Base delivery:', result?.baseDelivery);
         
-        membershipDiscount = result.baseDelivery;
-        finalResult.originalBaseDelivery = result.baseDelivery;
-        finalResult.baseDelivery = 0; // Free base delivery
+        membershipDiscount = result?.baseDelivery || 0;
+        finalResult.originalBaseDelivery = result?.baseDelivery || 0;
+        finalResult.baseDelivery = 0; 
         
-        // ✅ IMPORTANT: Membership covers only base delivery, NOT extra distance charges
-        // Extra distance charges are always applied regardless of membership
-        console.log(`ℹ️ Membership discount: ₹${membershipDiscount} (Base delivery only)`);
-        console.log(`ℹ️ Extra charges still apply: ₹${extraChargesAfterMembership}`);
+        console.log(`Membership discount: ₹${membershipDiscount} (Base delivery only)`);
+        console.log(`Extra charges still apply: ₹${extraChargesAfterMembership}`);
       } else {
-        finalResult.originalBaseDelivery = result.baseDelivery;
+        finalResult.originalBaseDelivery = result?.baseDelivery || 0;
       }
       
       // 2. Apply rapid delivery free if eligible
       if (isRapid && isRapidFree) {
-        console.log('✅ Rapid delivery is FREE due to membership');
-        rapidDiscount = result.rapidDeliveryFee || 0;
-        finalResult.originalRapidDeliveryFee = result.rapidDeliveryFee || 0;
-        finalResult.rapidDeliveryFee = 0; // Free rapid delivery
+        console.log('Rapid delivery is FREE due to membership');
+        rapidDiscount = result?.rapidDeliveryFee || 0;
+        finalResult.originalRapidDeliveryFee = result?.rapidDeliveryFee || 0;
+        finalResult.rapidDeliveryFee = 0;
       } else {
-        finalResult.originalRapidDeliveryFee = result.rapidDeliveryFee || 0;
+        finalResult.originalRapidDeliveryFee = result?.rapidDeliveryFee || 0;
       }
       
-      // ✅ Calculate total delivery with ALL components
-      // Total Delivery = Base Delivery + Extra Distance Charges + Rapid Delivery Fee
-      const totalDelivery = finalResult.baseDelivery + extraChargesAfterMembership + finalResult.rapidDeliveryFee;
-      
+      const totalDelivery = (finalResult.baseDelivery || 0) + (extraChargesAfterMembership || 0) + (finalResult.rapidDeliveryFee || 0);
       finalResult.totalDelivery = totalDelivery;
+      finalResult.finalTotal = subtotal + finalResult.totalDelivery + (finalResult.taxAmount || 0);
       
-      // ✅ Calculate final total including everything
-      finalResult.finalTotal = subtotal + finalResult.totalDelivery + finalResult.taxAmount;
-      
-      // Add membership info
-      finalResult.membershipApplied = currentMembershipData.isFreeDelivery && currentMembershipData.remainingDeliveries > 0;
+      finalResult.membershipApplied = !!(currentMembershipData?.isFreeDelivery && currentMembershipData?.remainingDeliveries > 0);
       finalResult.rapidFreeApplied = isRapid && isRapidFree;
       finalResult.membershipDiscount = membershipDiscount;
       finalResult.rapidDiscount = rapidDiscount;
       finalResult.totalMembershipDiscount = membershipDiscount + rapidDiscount;
-      finalResult.membershipRemainingDeliveries = currentMembershipData.remainingDeliveries;
-      finalResult.perKmCharge = foodDeliveryCharges.perKmCharge || 5; // Store per km charge for display
+      finalResult.membershipRemainingDeliveries = currentMembershipData?.remainingDeliveries || 0;
+      finalResult.perKmCharge = foodDeliveryCharges.perKmCharge || 5;
       
-      // Ensure no NaN values
       finalResult.baseDelivery = finalResult.baseDelivery || 0;
       finalResult.rapidDeliveryFee = finalResult.rapidDeliveryFee || 0;
       finalResult.extraCharges = extraChargesAfterMembership || 0;
       finalResult.totalDelivery = finalResult.totalDelivery || 0;
-      finalResult.finalTotal = finalResult.finalTotal || (subtotal + finalResult.totalDelivery + finalResult.taxAmount);
-      
-      console.log("✅ Final delivery charges calculation:");
-      console.log("  Subtotal: ₹" + subtotal.toFixed(2));
-      console.log("  Base Delivery: ₹" + finalResult.baseDelivery.toFixed(2));
-      console.log("  Extra Distance Charges: ₹" + finalResult.extraCharges.toFixed(2) + 
-                  ` (${finalResult.extraDistance} km × ₹${finalResult.perKmCharge}/km)`);
-      console.log("  Rapid Delivery Fee: ₹" + finalResult.rapidDeliveryFee.toFixed(2));
-      console.log("  Total Delivery: ₹" + finalResult.totalDelivery.toFixed(2));
-      console.log("  Tax: ₹" + finalResult.taxAmount.toFixed(2));
-      console.log("  Final Total: ₹" + finalResult.finalTotal.toFixed(2));
-      console.log("  Membership Discount: ₹" + finalResult.totalMembershipDiscount.toFixed(2));
+      finalResult.finalTotal = finalResult.finalTotal || (subtotal + finalResult.totalDelivery + (finalResult.taxAmount || 0));
       
       setDeliveryChargesData(finalResult);
       
-      // Store last calculation
       lastCalculationRef.current = {
         key: currentCalcKey,
         subtotal,
         isRapid,
-        membershipApplied: currentMembershipData.isFreeDelivery,
+        membershipApplied: !!currentMembershipData?.isFreeDelivery,
         rapidFree: isRapidFree
       };
       
@@ -368,12 +342,11 @@ const ProductCart = () => {
     } catch (error) {
       console.error('Error calculating delivery charges:', error);
       
-      // ✅ FALLBACK: Manual calculation with extra distance charges
-      console.log("⚠️ Using fallback calculation method");
+      // FALLBACK: Manual calculation with extra distance charges
+      console.log("Using fallback calculation method");
       
-      // Calculate distance (simplified - straight line distance)
       const toRad = (value) => (value * Math.PI) / 180;
-      const R = 6371; // Earth's radius in km
+      const R = 6371;
       
       const lat1 = userLocation.latitude;
       const lon1 = userLocation.longitude;
@@ -388,11 +361,10 @@ const ProductCart = () => {
                 Math.sin(dLon / 2) * Math.sin(dLon / 2);
       
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      const distance = Math.round(R * c * 10) / 10; // Round to 1 decimal place
+      const distance = Math.round(R * c * 10) / 10;
       
-      console.log(`📍 Calculated distance: ${distance} km`);
+      console.log(`Calculated distance: ${distance} km`);
       
-      // Get delivery settings
       const freeDeliveryRadius = foodDeliveryCharges.freeDeliveryRadius || 10;
       const perKmCharge = foodDeliveryCharges.perKmCharge || 5;
       const baseDeliveryCharge = foodDeliveryCharges.baseDeliveryCharge || 50;
@@ -406,47 +378,32 @@ const ProductCart = () => {
       let rapidDeliveryFee = isRapid ? rapidDeliveryCharge : 0;
       let totalDelivery = 0;
       
-      // ✅ Calculate extra distance charges per kilometer beyond free radius
       if (distance > freeDeliveryRadius) {
-        extraDistance = Math.round((distance - freeDeliveryRadius) * 10) / 10; // Round to 1 decimal
-        extraCharges = Math.round(extraDistance * perKmCharge * 100) / 100; // Round to 2 decimals
-        console.log(`📏 Extra distance: ${extraDistance} km beyond ${freeDeliveryRadius} km free radius`);
-        console.log(`💰 Extra charges:  ₹${extraCharges}`);
+        extraDistance = Math.round((distance - freeDeliveryRadius) * 10) / 10;
+        extraCharges = Math.round(extraDistance * perKmCharge * 100) / 100;
       }
       
-      // Calculate base delivery
       if (subtotal >= freeDeliveryThreshold) {
         baseDelivery = 0;
-        console.log("✅ Free base delivery due to order amount");
       } else {
         baseDelivery = baseDeliveryCharge;
       }
       
-      // ✅ Apply membership discounts
       let membershipDiscount = 0;
       let rapidDiscount = 0;
       
-      // Check if rapid delivery should be free
       const isRapidFree = checkRapidDeliveryFreeEligibility();
       
-      // Apply membership free delivery (base delivery only)
-      if (currentMembershipData.isFreeDelivery && currentMembershipData.remainingDeliveries > 0) {
-        console.log("✅ Applying membership free delivery (base delivery only)");
+      if (currentMembershipData?.isFreeDelivery && currentMembershipData?.remainingDeliveries > 0) {
         membershipDiscount = baseDelivery;
         baseDelivery = 0;
-        
-        // Note: Extra distance charges still apply even with membership
-        console.log(`ℹ️ Extra distance charges still apply with membership: ₹${extraCharges}`);
       }
       
-      // Apply rapid delivery free
       if (isRapid && isRapidFree) {
-        console.log("✅ Rapid delivery is FREE due to membership");
         rapidDiscount = rapidDeliveryFee;
         rapidDeliveryFee = 0;
       }
       
-      // ✅ Calculate total delivery with all components
       totalDelivery = baseDelivery + extraCharges + rapidDeliveryFee;
       
       const taxAmount = Math.round((subtotal * taxPercentage) / 100 * 100) / 100;
@@ -467,9 +424,9 @@ const ProductCart = () => {
         taxAmount: taxAmount,
         finalTotal: finalTotal,
         distanceCalculationType: 'fallback',
-        membershipApplied: currentMembershipData.isFreeDelivery && currentMembershipData.remainingDeliveries > 0,
+        membershipApplied: !!(currentMembershipData?.isFreeDelivery && currentMembershipData?.remainingDeliveries > 0),
         rapidFreeApplied: isRapid && isRapidFree,
-        membershipRemainingDeliveries: currentMembershipData.remainingDeliveries,
+        membershipRemainingDeliveries: currentMembershipData?.remainingDeliveries || 0,
         membershipDiscount: membershipDiscount,
         rapidDiscount: rapidDiscount,
         totalMembershipDiscount: membershipDiscount + rapidDiscount,
@@ -479,7 +436,6 @@ const ProductCart = () => {
         freeDeliveryRadius: freeDeliveryRadius
       };
       
-      console.log("✅ Fallback calculation complete:", fallbackResult);
       setDeliveryChargesData(fallbackResult);
       return fallbackResult;
     } finally {
@@ -504,23 +460,24 @@ const ProductCart = () => {
     let totalQty = 0;
     let hasOutOfStock = false;
 
-    // Calculate cart total
+    // Filtered safely and calculated
     cartItems.forEach(item => {
-      if (item.FoodItem?.status === "1") {
+      if (!item || !item.FoodItem) return;
+      
+      if (item.FoodItem.status === "1") {
         hasOutOfStock = true;
         return;
       }
 
-      const price = parseFloat(item.FoodItem?.amount) || 0;
-      const discount = parseFloat(item.FoodItem?.discountPercentage) || 0;
+      const price = parseFloat(item.FoodItem.amount) || 0;
+      const discount = parseFloat(item.FoodItem.discountPercentage) || 0;
       const discountedPrice = price - (price * discount / 100);
       const addonsPrice = (item.extraItems?.reduce((sum, addon) =>
-        sum + (parseFloat(addon?.price) || 0), 0) || 0) * item.quantity;
-      total += (discountedPrice * item.quantity) + addonsPrice;
+        sum + (parseFloat(addon?.price) || 0), 0) || 0) * (item.quantity || 1);
+      total += (discountedPrice * (item.quantity || 1)) + addonsPrice;
       totalQty += (item.quantity || 0);
     });
 
-    // Calculate coupon discount
     let discPrice = 0;
     if (appliedCoupon) {
       if (appliedCoupon.percentageDiscount) {
@@ -532,7 +489,6 @@ const ProductCart = () => {
 
     const subtotalAfterDiscount = Math.max(0, total - discPrice);
 
-    // Use pre-calculated delivery charges data if available
     if (deliveryChargesData && !calculatingCharges) {
       return {
         currentTotal: total,
@@ -547,8 +503,7 @@ const ProductCart = () => {
       };
     }
 
-    // If no delivery charges calculated yet, return basic values
-    const basicResult = {
+    return {
       currentTotal: total,
       discountedPrice: discPrice,
       displayTotal: subtotalAfterDiscount,
@@ -572,13 +527,11 @@ const ProductCart = () => {
         membershipDiscount: 0,
         rapidDiscount: 0,
         totalMembershipDiscount: 0,
-        membershipRemainingDeliveries: membershipData.remainingDeliveries,
+        membershipRemainingDeliveries: membershipData?.remainingDeliveries || 0,
         perKmCharge: foodDeliveryCharges?.perKmCharge || 5
       }
     };
-    
-    return basicResult;
-  }, [cartItems, appliedCoupon, deliveryChargesData, calculatingCharges, membershipData.remainingDeliveries, foodDeliveryCharges]);
+  }, [cartItems, appliedCoupon, deliveryChargesData, calculatingCharges, membershipData?.remainingDeliveries, foodDeliveryCharges]);
 
   const loadCartData = useCallback(async () => {
     try {
@@ -602,14 +555,25 @@ const ProductCart = () => {
         return;
       }
 
-      const vendorIdFromCart = cartData.details[0]?.FoodItem?.vendorId;
+      // SAFE CLEAN: Filter out any possible null/undefined elements or items missing FoodItem
+      const cleanDetails = cartData.details.filter(
+        item => item && item.FoodItem
+      );
+
+      if (cleanDetails.length === 0) {
+        setCartItems([]);
+        setVendorId("");
+        return;
+      }
+
+      const vendorIdFromCart = cleanDetails[0]?.FoodItem?.vendorId;
       if (!vendorIdFromCart) {
         throw new Error("Vendor information not found in cart items");
       }
 
       console.log("Vendor ID found:", vendorIdFromCart);
       setVendorId(vendorIdFromCart);
-      setCartItems(cartData.details);
+      setCartItems(cleanDetails);
 
     } catch (err) {
       console.error("Error loading cart:", err);
@@ -628,14 +592,23 @@ const ProductCart = () => {
       if (!data) {
         throw new Error("Failed to load addresses");
       }
-      console.log("Addresses loaded:", data.length);
-      setAddresses(data);
-      if (data.length > 0) {
-        setSelectedAddress(prev =>
-          prev && data.some(addr => addr._id === prev._id)
-          ? data.find(addr => addr._id === prev._id)
-          : data[0]
-        );
+      
+      // SAFE CLEAN: Filter out any null/undefined address records
+      const cleanAddresses = Array.isArray(data)
+        ? data.filter(addr => addr !== null && addr !== undefined)
+        : [];
+
+      console.log("Addresses loaded:", cleanAddresses.length);
+      setAddresses(cleanAddresses);
+      
+      if (cleanAddresses.length > 0) {
+        setSelectedAddress(prev => {
+          if (!prev) return cleanAddresses[0];
+          const exists = cleanAddresses.some(addr => addr?._id === prev?._id);
+          return exists ? cleanAddresses.find(addr => addr?._id === prev?._id) : cleanAddresses[0];
+        });
+      } else {
+        setSelectedAddress(null);
       }
     } catch (err) {
       console.error("Error loading addresses:", err);
@@ -645,7 +618,7 @@ const ProductCart = () => {
     }
   }, [fetchAddresses]);
 
-  // ✅ Main initialization - run only once
+  // Main initialization - run only once
   useEffect(() => {
     let mounted = true;
     
@@ -655,38 +628,22 @@ const ProductCart = () => {
       console.log("=== STARTING INITIALIZATION ===");
       
       try {
-        // Step 1: Fetch delivery charges settings
-        console.log("Step 1: Fetching delivery charges settings...");
         if (fetchFoodDeliveryCharges) {
           await fetchFoodDeliveryCharges();
         }
         
-        // Step 2: Load cart data
-        console.log("Step 2: Loading cart data...");
         await loadCartData();
-        
-        // Step 3: Load addresses
-        console.log("Step 3: Loading addresses...");
         await loadAddresses();
         
-        // Step 4: Get user location
-        console.log("Step 4: Getting user location...");
         try {
           await getCurrentLocation();
         } catch (locationError) {
           console.warn('Could not get user location:', locationError.message);
-          // Continue with null location
         }
         
-        // Step 5: Check membership status
-        console.log("Step 5: Checking membership status...");
         await checkMembershipForDelivery();
-        
-        // Step 6: Check rapid delivery free eligibility
-        console.log("Step 6: Checking rapid delivery free eligibility...");
         checkRapidDeliveryFreeEligibility();
         
-        // Step 7: Mark as initialized
         setInitialized(true);
         console.log("=== INITIALIZATION COMPLETE ===");
         
@@ -703,14 +660,14 @@ const ProductCart = () => {
     };
   }, []);
 
-  // ✅ Update rapid delivery free eligibility when membership changes
+  // Update rapid delivery free eligibility when membership changes
   useEffect(() => {
     if (initialized) {
       checkRapidDeliveryFreeEligibility();
     }
   }, [membershipData, initialized, checkRapidDeliveryFreeEligibility]);
 
-  // ✅ Calculate delivery charges when needed
+  // Calculate delivery charges when needed
   useEffect(() => {
     if (!initialized) {
       console.log("Not initialized yet, skipping delivery calculation");
@@ -739,9 +696,6 @@ const ProductCart = () => {
     };
 
     console.log("=== CALCULATING DELIVERY CHARGES ===");
-    console.log("Current membership data:", membershipData);
-    console.log("Rapid delivery free:", isRapidDeliveryFree);
-    console.log("Per km charge:", foodDeliveryCharges?.perKmCharge);
 
     calculateDeliveryCharges(
       displayTotal,
@@ -810,15 +764,9 @@ const ProductCart = () => {
     }
   }, [vendorId, selectedDate, fetchAvailableSlots, initialized]);
 
-  // ✅ UPDATED: Handle rapid delivery change with free logic
+  // Handle rapid delivery change with free logic
   const handleRapidDeliveryChange = (e) => {
     const newIsRapid = e.target.checked;
-    
-    // If rapid delivery is being enabled and should be free, show message
-    if (newIsRapid && isRapidDeliveryFree) {
-      console.log("Enabling free rapid delivery due to membership");
-    }
-    
     setIsRapidDelivery(newIsRapid);
   };
 
@@ -827,7 +775,7 @@ const ProductCart = () => {
     try {
       setUpdatingItems(prev => ({ ...prev, [`${type}-${cartItemId}`]: true }));
 
-      const currentItem = cartItems.find(item => item._id === cartItemId);
+      const currentItem = cartItems.find(item => item?._id === cartItemId);
       if (!currentItem) throw new Error("Item not found in cart");
 
       if (currentItem.FoodItem?.status === "1") {
@@ -840,16 +788,15 @@ const ProductCart = () => {
         : Math.max(1, currentItem.quantity - 1);
 
       const updatedItems = cartItems.map(item =>
-        item._id === cartItemId ? { ...item, quantity: newQuantity } : item
+        item?._id === cartItemId ? { ...item, quantity: newQuantity } : item
       );
       setCartItems(updatedItems);
 
       await updateCartQuantity(foodItemId, newQuantity);
 
     } catch (error) {
-      // Revert to original cart items on error
       setCartItems(prevItems => prevItems.map(item =>
-        item._id === cartItemId ? { ...item, quantity: cartItems.find(orig => orig._id === cartItemId).quantity } : item
+        item?._id === cartItemId ? { ...item, quantity: cartItems.find(orig => orig?._id === cartItemId)?.quantity || 1 } : item
       ));
       console.error(`Error ${type === 'inc' ? 'increasing' : 'decreasing'} quantity:`, error);
       alert(error.message);
@@ -867,7 +814,7 @@ const ProductCart = () => {
         throw new Error(response?.message || "Failed to remove item");
       }
 
-      const updatedItems = cartItems.filter(item => item._id !== cartItemId);
+      const updatedItems = cartItems.filter(item => item?._id !== cartItemId);
       setCartItems(updatedItems);
 
       if (updatedItems.length === 0) {
@@ -899,7 +846,7 @@ const ProductCart = () => {
     setAppliedCoupon(coupon);
   }, [currentTotal]);
 
-  // ✅ UPDATED: Handle checkout with rapid delivery free logic and extra charges
+  // Handle checkout with rapid delivery free logic and extra charges
   const handleCheckout = async () => {
     if (!selectedAddress) {
       alert("Please select a delivery address");
@@ -911,13 +858,12 @@ const ProductCart = () => {
       return;
     }
 
-    // Check for out of stock items
     if (outOfStockItemsExist) {
       alert("Please remove all 'Out of Stock' items from your cart before proceeding to checkout.");
       return;
     }
 
-    const itemsForCheckout = cartItems.filter(item => item.FoodItem?.status !== "1");
+    const itemsForCheckout = cartItems.filter(item => item?.FoodItem?.status !== "1");
 
     if (itemsForCheckout.length === 0) {
       alert("Your cart is empty or all items are out of stock.");
@@ -927,25 +873,19 @@ const ProductCart = () => {
     try {
       setIsCheckingOut(true);
 
-      // ✅ Calculate updated membership deliveries
-      let updatedRemainingDeliveries = membershipData.remainingDeliveries;
+      let updatedRemainingDeliveries = membershipData?.remainingDeliveries || 0;
       let membershipWasApplied = false;
       let rapidWasFree = false;
       
-      if (membershipData.isFreeDelivery && membershipData.remainingDeliveries > 0) {
-        // Membership is being applied for this order
+      if (membershipData?.isFreeDelivery && membershipData?.remainingDeliveries > 0) {
         membershipWasApplied = true;
         
-        // Check if rapid delivery is free
         if (isRapidDelivery && isRapidDeliveryFree) {
           rapidWasFree = true;
         }
         
-        // Decrement deliveries only once per order (not for both base and rapid)
         updatedRemainingDeliveries = membershipData.remainingDeliveries - 1;
-        console.log(`✅ Membership applied. Reducing from ${membershipData.remainingDeliveries} to ${updatedRemainingDeliveries}`);
         
-        // ✅ Update local state immediately for better UX
         setMembershipData(prev => ({
           ...prev,
           remainingDeliveries: updatedRemainingDeliveries,
@@ -956,7 +896,6 @@ const ProductCart = () => {
         }));
       }
 
-      // Prepare order data to pass to payment page
       const orderData = {
         cartItems: itemsForCheckout,
         vendorId: vendorId,
@@ -983,36 +922,26 @@ const ProductCart = () => {
         rapid: isRapidDelivery,
         rapidFree: rapidWasFree,
         orderType: totalQuantity >= 2 ? "Bulk" : "Single",
-        foodIds: itemsForCheckout.map(item => item._id),
+        foodIds: itemsForCheckout.map(item => item?._id).filter(Boolean),
         distanceInfo: distanceInfo,
-        membershipApplied: membershipData.isFreeDelivery,
+        membershipApplied: !!membershipData?.isFreeDelivery,
         membershipRemainingDeliveries: updatedRemainingDeliveries,
         membershipWasApplied: membershipWasApplied,
         rapidWasFree: rapidWasFree,
-        membershipOriginalCount: membershipData.remainingDeliveries,
-        membershipDiscount: distanceInfo.totalMembershipDiscount || 0,
+        membershipOriginalCount: membershipData?.remainingDeliveries || 0,
+        membershipDiscount: distanceInfo?.totalMembershipDiscount || 0,
         originalTotal: currentTotal,
-        baseDeliveryCharge: distanceInfo.baseDelivery,
-        extraDistanceCharges: distanceInfo.extraCharges,
-        extraDistance: distanceInfo.extraDistance,
-        perKmCharge: distanceInfo.perKmCharge,
-        rapidDeliveryFee: distanceInfo.rapidDeliveryFee,
-        membershipDiscount: distanceInfo.totalMembershipDiscount || 0,
-        extraChargesCalculation: distanceInfo.extraDistance > 0 ? 
+        baseDeliveryCharge: distanceInfo?.baseDelivery || 0,
+        extraDistanceCharges: distanceInfo?.extraCharges || 0,
+        extraDistance: distanceInfo?.extraDistance || 0,
+        perKmCharge: distanceInfo?.perKmCharge || 5,
+        rapidDeliveryFee: distanceInfo?.rapidDeliveryFee || 0,
+        extraChargesCalculation: distanceInfo?.extraDistance > 0 ? 
           `${distanceInfo.extraDistance} km × ₹${distanceInfo.perKmCharge}/km = ₹${distanceInfo.extraCharges}` : 
           "No extra distance charges"
       };
 
-      console.log("✅ Order details with extra charges:", {
-        total: finalTotal,
-        baseDelivery: distanceInfo.baseDelivery,
-        extraDistance: distanceInfo.extraDistance,
-        extraCharges: distanceInfo.extraCharges,
-        perKmCharge: distanceInfo.perKmCharge,
-        calculation: orderData.extraChargesCalculation
-      });
-      
-      console.log("✅ Navigating to payment with order data:", orderData);
+      console.log("Order details with extra charges:", orderData);
       
       navigate('/shop/FoodAndNurition/payment', {
         state: orderData
@@ -1031,7 +960,10 @@ const ProductCart = () => {
       const addedAddress = await addNewAddress(newAddress);
       if (addedAddress) {
         const updatedAddresses = await fetchAddresses();
-        setAddresses(updatedAddresses);
+        const cleanAddresses = Array.isArray(updatedAddresses)
+          ? updatedAddresses.filter(addr => addr !== null && addr !== undefined)
+          : [];
+        setAddresses(cleanAddresses);
         setSelectedAddress(addedAddress);
         setForceUpdate(prev => prev + 1);
       }
@@ -1045,9 +977,12 @@ const ProductCart = () => {
     try {
       await updateAddress(addressId, updatedData);
       const updatedAddresses = await fetchAddresses();
-      setAddresses(updatedAddresses);
+      const cleanAddresses = Array.isArray(updatedAddresses)
+        ? updatedAddresses.filter(addr => addr !== null && addr !== undefined)
+        : [];
+      setAddresses(cleanAddresses);
       if (selectedAddress && selectedAddress._id === addressId) {
-        setSelectedAddress(updatedAddresses.find(addr => addr._id === addressId));
+        setSelectedAddress(cleanAddresses.find(addr => addr?._id === addressId) || null);
       }
       setForceUpdate(prev => prev + 1);
     } catch (error) {
@@ -1060,9 +995,12 @@ const ProductCart = () => {
     try {
       await deleteAddress(addressId);
       const updatedAddresses = await fetchAddresses();
-      setAddresses(updatedAddresses);
+      const cleanAddresses = Array.isArray(updatedAddresses)
+        ? updatedAddresses.filter(addr => addr !== null && addr !== undefined)
+        : [];
+      setAddresses(cleanAddresses);
       if (selectedAddress && selectedAddress._id === addressId) {
-        setSelectedAddress(updatedAddresses.length > 0 ? updatedAddresses[0] : null);
+        setSelectedAddress(cleanAddresses.length > 0 ? cleanAddresses[0] : null);
       }
       setForceUpdate(prev => prev + 1);
     } catch (error) {
@@ -1071,7 +1009,7 @@ const ProductCart = () => {
     }
   };
 
-  // ✅ Handle when user returns to cart after order
+  // Handle when user returns to cart after order
   useEffect(() => {
     const handleReturnToCart = () => {
       console.log("User returned to cart, refreshing membership data...");
@@ -1131,6 +1069,7 @@ const ProductCart = () => {
             </div>
 
             {cartItems.map((item) => {
+              if (!item) return null;
               const isOutOfStock = item.FoodItem?.status === "1";
               return (
                 <div key={item._id} className="card mb-3">
@@ -1157,7 +1096,7 @@ const ProductCart = () => {
                           <div>
                             <button
                               className="btn btn-sm btn-outline-danger me-2"
-                              onClick={() => handleRemoveItem(item._id, item.FoodItem._id)}
+                              onClick={() => handleRemoveItem(item._id, item.FoodItem?._id)}
                               disabled={updatingItems[`rem-${item._id}`]}
                             >
                               {updatingItems[`rem-${item._id}`] ? 'Removing...' : 'Remove'}
@@ -1184,7 +1123,7 @@ const ProductCart = () => {
                           <div className="d-flex align-items-center">
                             <button
                               className="btn btn-sm btn-outline-secondary"
-                              onClick={() => handleQuantityChange('dec', item._id, item.FoodItem._id)}
+                              onClick={() => handleQuantityChange('dec', item._id, item.FoodItem?._id)}
                               disabled={updatingItems[`dec-${item._id}`] || item.quantity <= 1 || isOutOfStock}
                             >
                               {updatingItems[`dec-${item._id}`] ? '...' : '-'}
@@ -1192,7 +1131,7 @@ const ProductCart = () => {
                             <span className="mx-2 fw-bold">{item.quantity}</span>
                             <button
                               className="btn btn-sm btn-outline-secondary"
-                              onClick={() => handleQuantityChange('inc', item._id, item.FoodItem._id)}
+                              onClick={() => handleQuantityChange('inc', item._id, item.FoodItem?._id)}
                               disabled={updatingItems[`inc-${item._id}`] || isOutOfStock}
                             >
                               {updatingItems[`inc-${item._id}`] ? '...' : '+'}
@@ -1210,12 +1149,15 @@ const ProductCart = () => {
                           <div className="mt-2 pt-2 border-top">
                             <h6>Addons:</h6>
                             <ul className="list-unstyled">
-                              {item.extraItems.map((addon) => (
-                                <li key={addon._id} className="d-flex justify-content-between">
-                                  <span>{addon.name}</span>
-                                  <span>₹{(parseFloat(addon.price) || 0).toFixed(2)}</span>
-                                </li>
-                              ))}
+                              {item.extraItems.map((addon) => {
+                                if (!addon) return null;
+                                return (
+                                  <li key={addon._id} className="d-flex justify-content-between">
+                                    <span>{addon.name}</span>
+                                    <span>₹{(parseFloat(addon.price) || 0).toFixed(2)}</span>
+                                  </li>
+                                );
+                              })}
                             </ul>
                           </div>
                         )}
@@ -1238,16 +1180,16 @@ const ProductCart = () => {
                   <small>Checking membership benefits...</small>
                 </div>
               </div>
-            ) : membershipData.hasActiveMembership && (
-              <div className={`alert ${membershipData.isFreeDelivery ? 'alert-success' : 'alert-warning'} mb-3`}>
+            ) : membershipData?.hasActiveMembership && (
+              <div className={`alert ${membershipData?.isFreeDelivery ? 'alert-success' : 'alert-warning'} mb-3`}>
                 <div className="d-flex align-items-center">
                   <i className="ri-medal-line fs-5 me-2"></i>
                   <div>
                     <strong>Membership Plan Active</strong>
                     <div className="small">
-                      {membershipData.isFreeDelivery ? (
+                      {membershipData?.isFreeDelivery ? (
                         <>
-                          <span className="d-block">Free delivery applied! ({membershipData.remainingDeliveries} deliveries remaining)</span>
+                          <span className="d-block">Free delivery applied! ({membershipData?.remainingDeliveries} deliveries remaining)</span>
                           <small className="text-muted">
                             Base delivery charges waived from your membership
                             {isRapidDeliveryFree && " • Rapid delivery is also FREE!"}
@@ -1278,8 +1220,8 @@ const ProductCart = () => {
               </div>
             )}
 
-            {/* ✅ UPDATED: Distance Information with Extra Charges Details */}
-            {distanceInfo.distance > 0 && (
+            {/* Distance Information with Extra Charges Details */}
+            {distanceInfo && distanceInfo.distance > 0 && (
               <div className="alert alert-info mb-3">
                 <div className="small">
                   <strong>Distance to Restaurant:</strong> {distanceInfo.distanceText}
@@ -1287,14 +1229,12 @@ const ProductCart = () => {
                     <div><strong>Estimated Time:</strong> {distanceInfo.durationText}</div>
                   )}
                   
-                  {/* Free Radius Information */}
                   {distanceInfo.freeDeliveryRadius && (
                     <div className="mt-1">
                       <strong>Free Delivery Radius:</strong> {distanceInfo.freeDeliveryRadius} km
                     </div>
                   )}
                   
-                  {/* Extra Distance Charges Calculation */}
                   {distanceInfo.extraDistance > 0 && (
                     <div className="mt-1 border-top pt-1">
                       <strong>Extra Distance Charges:</strong>
@@ -1306,10 +1246,7 @@ const ProductCart = () => {
                           • Rate: ₹{distanceInfo.perKmCharge || 5}/km
                         </div>
                         <div className="fw-bold">
-                          • Extra Charges: ₹{distanceInfo.extraCharges.toFixed(2)}
-                          <span className="text-muted ms-1">
-                            {/* ({distanceInfo.extraDistance} km × ₹{distanceInfo.perKmCharge || 5}/km) */}
-                          </span>
+                          • Extra Charges: ₹{distanceInfo.extraCharges ? distanceInfo.extraCharges.toFixed(2) : '0.00'}
                         </div>
                         {distanceInfo.membershipApplied && (
                           <div className="text-success small mt-1">
@@ -1397,17 +1334,17 @@ const ProductCart = () => {
                   </div>
                 )}
 
-                {/* ✅ UPDATED: Delivery Charge with detailed breakdown including extra charges */}
+                {/* Delivery Charge with detailed breakdown */}
                 <div className="d-flex justify-content-between align-items-center">
                   <span className="fw-medium">
                     Delivery Charge:
-                    {distanceInfo.freeDeliveryEligible && (
+                    {distanceInfo?.freeDeliveryEligible && (
                       <span className="text-success ms-1 small">(Free Base Delivery!)</span>
                     )}
-                    {distanceInfo.membershipApplied && (
+                    {distanceInfo?.membershipApplied && (
                       <span className="text-success ms-1 small">(Membership Free Delivery!)</span>
                     )}
-                    {distanceInfo.rapidFreeApplied && (
+                    {distanceInfo?.rapidFreeApplied && (
                       <span className="text-success ms-1 small">(Free Rapid Delivery!)</span>
                     )}
                   </span>
@@ -1420,8 +1357,8 @@ const ProductCart = () => {
                   </span>
                 </div>
 
-                {/* ✅ UPDATED: Delivery Charge Detailed Breakdown */}
-                {deliveryCharge > 0 && (
+                {/* Delivery Charge Detailed Breakdown */}
+                {deliveryCharge > 0 && distanceInfo && (
                   <div className="small text-muted mt-1 ps-2 border-start border-secondary">
                     {/* Base Delivery */}
                     {distanceInfo.originalBaseDelivery > 0 && distanceInfo.membershipApplied && (
@@ -1438,9 +1375,6 @@ const ProductCart = () => {
                       <div className="mt-1">
                         <div className="fw-medium">Extra Distance Charges:</div>
                         <div className="ms-2">
-                          <div className="text-muted">
-                            {/* {distanceInfo.extraDistance} km × ₹{distanceInfo.perKmCharge || 5}/km */}
-                          </div>
                           <div className="fw-bold">
                             ₹{distanceInfo.extraCharges.toFixed(2)}
                           </div>
@@ -1488,8 +1422,8 @@ const ProductCart = () => {
                   <span className="fw-bold fs-5 text-mainRed">₹{finalTotal.toFixed(2)}</span>
                 </div>
 
-                {/* ✅ UPDATED: Membership Savings with extra charges note */}
-                {distanceInfo.totalMembershipDiscount > 0 && (
+                {/* Membership Savings */}
+                {distanceInfo && distanceInfo.totalMembershipDiscount > 0 && (
                   <div className="mt-2">
                     <small className="text-success">
                       <i className="ri-money-rupee-circle-line me-1"></i>
@@ -1506,7 +1440,7 @@ const ProductCart = () => {
                 )}
 
                 {/* Free Delivery Message */}
-                {foodDeliveryCharges && displayTotal < foodDeliveryCharges.freeDeliveryThreshold && !membershipData.isFreeDelivery && (
+                {foodDeliveryCharges && displayTotal < foodDeliveryCharges.freeDeliveryThreshold && !membershipData?.isFreeDelivery && (
                   <div className="mt-2">
                     <small className="text-success">
                       Add ₹{(foodDeliveryCharges.freeDeliveryThreshold - displayTotal).toFixed(2)} more for FREE base delivery!
@@ -1515,7 +1449,7 @@ const ProductCart = () => {
                 )}
 
                 {/* Membership Delivery Limit Info */}
-                {membershipData.isFreeDelivery && membershipData.remainingDeliveries > 0 && (
+                {membershipData?.isFreeDelivery && membershipData?.remainingDeliveries > 0 && (
                   <div className="mt-2">
                     <small className="text-info">
                       <i className="ri-information-line me-1"></i>
@@ -1525,8 +1459,8 @@ const ProductCart = () => {
                   </div>
                 )}
 
-                {/* ✅ Warning if last free delivery */}
-                {membershipData.isFreeDelivery && membershipData.remainingDeliveries === 1 && (distanceInfo.membershipApplied || distanceInfo.rapidFreeApplied) && (
+                {/* Warning if last free delivery */}
+                {membershipData?.isFreeDelivery && membershipData?.remainingDeliveries === 1 && (distanceInfo?.membershipApplied || distanceInfo?.rapidFreeApplied) && (
                   <div className="mt-2">
                     <small className="text-warning">
                       <i className="ri-alert-line me-1"></i>
@@ -1548,7 +1482,7 @@ const ProductCart = () => {
               </div>
             </div>
 
-            {/* ✅ UPDATED: Delivery Options Section */}
+            {/* Delivery Options Section */}
             <div className="card mb-3">
               <div className="card-body">
                 <h6 className="fw-bold mb-3">Delivery Options</h6>
@@ -1565,41 +1499,29 @@ const ProductCart = () => {
 
                   <label className="form-label">Meal Type</label>
 
-<div className="row text-center mb-3">
-
-  {[
-    { type: "morning", label: "Morning"},
-    { type: "afternoon", label: "Afternoon"},
-    { type: "evening", label: "Evening" }
-  ].map((meal) => (
-
-    <div className="col-4" key={meal.type}>
-
-      <div
-        onClick={() => setSelectedMealType(meal.type)}
-        className={`border rounded p-3 ${
-          selectedMealType === meal.type
-            ? "bg-danger text-white"
-            : "bg-light"
-        }`}
-        style={{ cursor: "pointer" }}
-      >
-
-        <div style={{ fontSize: "22px" }}>
-          {meal.icon}
-        </div>
-
-        <div className="fw-semibold mt-1">
-          {meal.label}
-        </div>
-
-      </div>
-
-    </div>
-
-  ))}
-
-</div>
+                  <div className="row text-center mb-3">
+                    {[
+                      { type: "morning", label: "Morning"},
+                      { type: "afternoon", label: "Afternoon"},
+                      { type: "evening", label: "Evening" }
+                    ].map((meal) => (
+                      <div className="col-4" key={meal.type}>
+                        <div
+                          onClick={() => setSelectedMealType(meal.type)}
+                          className={`border rounded p-3 ${
+                            selectedMealType === meal.type
+                              ? "bg-danger text-white"
+                              : "bg-light"
+                          }`}
+                          style={{ cursor: "pointer" }}
+                        >
+                          <div className="fw-semibold mt-1">
+                            {meal.label}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
 
                   <label className="form-label">Available Slots</label>
                   {availableSlots[selectedMealType]?.length > 0 ? (
@@ -1607,26 +1529,34 @@ const ProductCart = () => {
                       className="form-select"
                       value={selectedSlot ? `${selectedSlot.startTime}-${selectedSlot.endTime}` : ""}
                       onChange={(e) => {
-                        const [startTime, endTime] = e.target.value.split('-');
-                        setSelectedSlot({ mealType: selectedMealType, startTime, endTime });
+                        const parts = e.target.value.split('-');
+                        if (parts.length === 2) {
+                          const [startTime, endTime] = parts;
+                          setSelectedSlot({ mealType: selectedMealType, startTime, endTime });
+                        } else {
+                          setSelectedSlot(null);
+                        }
                       }}
                     >
                       <option value="">Select a time slot</option>
-                      {availableSlots[selectedMealType].map((slot, index) => (
-                        <option
-                          key={index}
-                          value={`${slot.startTime}-${slot.endTime}`}
-                        >
-                          {moment(slot.startTime, "HH:mm").format("h:mm A")} - {moment(slot.endTime, "HH:mm").format("h:mm A")}
-                        </option>
-                      ))}
+                      {availableSlots[selectedMealType].map((slot, index) => {
+                        if (!slot) return null;
+                        return (
+                          <option
+                            key={index}
+                            value={`${slot.startTime}-${slot.endTime}`}
+                          >
+                            {moment(slot.startTime, "HH:mm").format("h:mm A")} - {moment(slot.endTime, "HH:mm").format("h:mm A")}
+                          </option>
+                        );
+                      })}
                     </select>
                   ) : (
                     <div className="alert alert-warning">No slots available for selected date/meal type</div>
                   )}
                 </div>
 
-                {/* ✅ UPDATED: Rapid Delivery Option */}
+                {/* Rapid Delivery Option */}
                 <div className="form-check form-switch mb-3">
                   <input
                     className="form-check-input"
@@ -1638,7 +1568,7 @@ const ProductCart = () => {
                   />
                   <label className="form-check-label" htmlFor="rapidDelivery">
                     <strong>Rapid Delivery</strong> 
-                    {isRapidDeliveryFree && membershipData.isFreeDelivery ? (
+                    {isRapidDeliveryFree && membershipData?.isFreeDelivery ? (
                       <span className="text-success ms-1">(FREE with membership!)</span>
                     ) : (
                       <span className="text-danger ms-1">
@@ -1646,7 +1576,7 @@ const ProductCart = () => {
                       </span>
                     )}
                     <small className="d-block text-muted">Faster delivery with priority handling</small>
-                    {isRapidDeliveryFree && membershipData.isFreeDelivery && (
+                    {isRapidDeliveryFree && membershipData?.isFreeDelivery && (
                       <small className="d-block text-success">
                         <i className="ri-medal-line me-1"></i>
                         Free rapid delivery included with your active membership
@@ -1655,7 +1585,7 @@ const ProductCart = () => {
                   </label>
                 </div>
 
-                {/* ✅ UPDATED: Delivery Charges Info with Extra Charges Details */}
+                {/* Delivery Charges Info with Extra Charges Details */}
                 {foodDeliveryCharges && (
                   <div className="bg-light p-2 rounded small">
                     <div className="d-flex justify-content-between">
@@ -1670,7 +1600,7 @@ const ProductCart = () => {
                       <span>Free Base Delivery Above:</span>
                       <span>₹{foodDeliveryCharges.freeDeliveryThreshold}</span>
                     </div>
-                    {distanceInfo.extraDistance > 0 && (
+                    {distanceInfo && distanceInfo.extraDistance > 0 && (
                       <div className="mt-1 p-1 bg-white rounded border">
                         <div className="d-flex justify-content-between fw-medium">
                           <span>Current Extra Distance:</span>
@@ -1678,11 +1608,11 @@ const ProductCart = () => {
                         </div>
                         <div className="d-flex justify-content-between text-danger">
                           <span>Extra Charges:</span>
-                          <span>₹{distanceInfo.extraCharges.toFixed(2)}</span>
+                          <span>₹{distanceInfo.extraCharges ? distanceInfo.extraCharges.toFixed(2) : '0.00'}</span>
                         </div>
                       </div>
                     )}
-                    {membershipData.hasActiveMembership && (
+                    {membershipData?.hasActiveMembership && (
                       <>
                         <div className="d-flex justify-content-between text-success mt-1">
                           <span>Membership Free Deliveries:</span>
