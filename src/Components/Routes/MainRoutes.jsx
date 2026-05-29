@@ -73,6 +73,7 @@ import PatientVideoCall from "../Pages/Doctor/PatientVideoCall";
 import IncomingCall from "../Pages/Doctor/IncomingCall";
 import PatientDashboard from "../Pages/Doctor/PatientDashboard";
 import MedicineComponent from "../landingpageComponents/MedicineComponent";
+import Signup from "../Pages/Signup/OnlySignup";
 
 
 const MainRoutes = () => {
@@ -186,6 +187,7 @@ const MainRoutes = () => {
         <Route path="/UserLogin" element={<Login />} />
         <Route path="/otp-verify" element={<OtpVerify />} />
         <Route path="/update-profile" element={<Register />} />
+        <Route path="/only-signup" element={<Signup />} />
         <Route path="/DiabeticType" element={<RegisterStep2  />} />
         <Route path="/CaregiverDetails" element={<CaregiverDetails />} />
         {/* <Route path="/ForgotPassword" element={<ForgotPassword />} /> */}

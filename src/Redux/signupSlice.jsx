@@ -30,15 +30,25 @@ export const verifyOtp = createAsyncThunk(
 
 export const updateUser = createAsyncThunk(
   "auth/updateUser",
-  async ({ userId, regId }, { rejectWithValue }) => {
+  async (formData, { rejectWithValue }) => {
     try {
-      const { data } = await axios.post(`${URL}/user/update-user`, { userId, regId });
+      // Token nikalna zaroori hai kyunki backend mein middleware laga hai
+      const token = JSON.parse(sessionStorage.getItem("token"));
+
+      const { data } = await axios.put(`${URL}/user/update-user`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          token: token, // Aapka middleware isi header key ko check kar raha hai
+        },
+      });
       return data;
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error updating user");
     }
   }
 );
+
+
 
 export const verifypromo = createAsyncThunk(
   "auth/verifypromo",
