@@ -13,6 +13,7 @@ import img10 from "./Assets/img/horizontlBnner2.png";
 import img11 from "./Assets/img/horizontlBnner3.png";
 import img12 from "./Assets/img/horizontlBnner4.png";
 import vedio1 from "./Assets/vedios/docVedio.mp4";
+import PremiumDoctorSection from './HomePageDoctor';
 
 // ==========================================
 // 1. TESTIMONIAL CARD SLIDER
@@ -1065,7 +1066,7 @@ const LandingPage = () => {
                 <li className="check-list-item"><i className="fas fa-check-circle"></i> Direct access to top-tier health specialists</li>
               </ul>
 
-              <a href="#doctors" className="hero-btn-blue px-4 py-3" style={{ fontSize: '1rem' }}>
+              <a href="/CareProgram" className="hero-btn-blue px-4 py-3" style={{ fontSize: '1rem' }}>
                 Discover Our Plans <i className="fas fa-arrow-right ms-2"></i>
               </a>
             </div>
@@ -1216,52 +1217,9 @@ const LandingPage = () => {
       </section>
 
       {/* 6. DOCTORS SECTION (FULLY UPGRADED PREMIUM DESIGN) */}
-      <section id="doctors" className="py-5 doctors-section-bg border-top">
+      <section id="doctors" className="py-5 doctors-section-bg ">
         <div className="container">
-          <div className="text-center mb-5">
-            <h2 className="brand-section-header">World‑Class <span>Doctors</span></h2>
-            <div className="luxury-divider" style={{ background: 'linear-gradient(90deg, transparent, #0A66C2, #38bdf8, transparent)' }}></div>
-            <p className="text-muted mt-3 fw-medium">Recognized specialists from global diabetes institutes</p>
-          </div>
-          <div className="row g-4 align-items-stretch">
-            <div className="col-lg-4">
-              <div className="clinic-highlight-card">
-                <div className="mb-4 bg-white rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm" style={{ width: '60px', height: '60px' }}>
-                  <i className="fas fa-clinic-medical fa-2x" style={{ color: '#0A66C2' }}></i>
-                </div>
-                <h3 className="fw-bold mb-3 text-white display-6" style={{ fontSize: '2rem' }}>
-                  DiabeticWala <br /><span className="text-info">Clinics</span>
-                </h3>
-                <p className="text-white-50 mb-0" style={{ lineHeight: '1.6' }}>
-                  Premium centers with cutting-edge diabetic care, 24/7 teleconsultation, and advanced metabolic wellness programs.
-                </p>
-              </div>
-            </div>
-            <div className="col-lg-8">
-              <div className="row g-4 h-100">
-                {[
-                  { name: "Dr. Ankit Sharma", specialty: "Endocrinologist", img: "https://randomuser.me/api/portraits/men/32.jpg", rating: 4.5 },
-                  { name: "Dr. Neha Verma", specialty: "Diabetologist", img: "https://randomuser.me/api/portraits/women/44.jpg", rating: 5 },
-                  { name: "Dr. Rohan Iyer", specialty: "Cardio-diabetic", img: "https://randomuser.me/api/portraits/men/75.jpg", rating: 5 }
-                ].map((doc, i) => (
-                  <div className="col-md-4" key={i}>
-                    <div className="premium-doctor-card">
-                      <div className="doctor-img-ring">
-                        <img src={doc.img} alt={doc.name} />
-                      </div>
-                      <h5 className="doc-name">{doc.name}</h5>
-                      <div className="doc-specialty">{doc.specialty}</div>
-                      <div className="doc-rating">
-                        {Array(5).fill().map((_, idx) => (
-                          <i key={idx} className={`fas fa-star ${idx < Math.floor(doc.rating) ? 'text-warning' : 'text-muted'}`} style={{ fontSize: '0.8rem' }}></i>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+        <PremiumDoctorSection />
         </div>
       </section>
 
@@ -1277,7 +1235,7 @@ const LandingPage = () => {
             <p className="cta-desc">Join thousands of patients who have successfully controlled and reversed their diabetes with our expert-led programs and premium healthcare products.</p>
             <div className="d-flex justify-content-center gap-3 flex-wrap">
               <a href="#doctors" className="hero-btn-blue px-5 py-3 fs-5">Book Consultation</a>
-              <a href="#products" className="hero-btn-outline px-5 py-3 fs-5">Shop Medicines</a>
+              <a href="/Pharmacy" className="hero-btn-outline px-5 py-3 fs-5">Shop Medicines</a>
             </div>
           </div>
         </div>

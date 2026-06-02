@@ -74,6 +74,7 @@ import IncomingCall from "../Pages/Doctor/IncomingCall";
 import PatientDashboard from "../Pages/Doctor/PatientDashboard";
 import MedicineComponent from "../landingpageComponents/MedicineComponent";
 import Signup from "../Pages/Signup/OnlySignup";
+import PremiumDoctorSection from "../HomePageDoctor";
 
 
 const MainRoutes = () => {
@@ -81,6 +82,7 @@ const MainRoutes = () => {
     <>
       <Routes>
         <Route path="/" element={<LandingPage />} />
+        <Route path="/home-doctor" element={<PremiumDoctorSection />} />
         {/* <Route path="/Blogs" element={<ProtectUser><Blogs /></ProtectUser>} /> */}
         {/* Blogs routes */}
         <Route path="/blogs" element={<Blogs />} />
