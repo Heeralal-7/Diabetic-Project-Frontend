@@ -14,6 +14,7 @@ import img11 from "./Assets/img/horizontlBnner3.png";
 import img12 from "./Assets/img/horizontlBnner4.png";
 import vedio1 from "./Assets/vedios/docVedio.mp4";
 import PremiumDoctorSection from './HomePageDoctor';
+import LabNearMe from './LabNearMe';
 
 // ==========================================
 // 1. TESTIMONIAL CARD SLIDER
@@ -232,7 +233,7 @@ const LandingPage = () => {
       }
     };
     fetchAllData();
-// eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Fetch Food Data based on Location
@@ -951,10 +952,10 @@ const LandingPage = () => {
                 Personalized solutions, world-class endocrinologists, and medical-grade products.
               </p>
               <div className="d-flex flex-wrap gap-3 mb-5 hero-btn-wrapper">
-                <a href="#products" className="hero-btn-blue">
+                <a href="/Pharmacy" className="hero-btn-blue">
                   Shop Now <i className="fas fa-arrow-right"></i>
                 </a>
-                <a href="#doctors" className="hero-btn-outline">
+                <a href="/Doctors" className="hero-btn-outline">
                   Book Consult
                 </a>
               </div>
@@ -1073,6 +1074,10 @@ const LandingPage = () => {
           </div>
         </div>
       </section>
+{/* ----------------------------------------------------------------------------------------------- */}
+      <section>
+        <LabNearMe/>
+      </section>
 
       {/* 2. TRENDING BRANDS (GLASSMORPHISM & PARALLAX BACKGROUND) */}
       <section className="trending-brands-parallax">
@@ -1083,7 +1088,7 @@ const LandingPage = () => {
               <h2 className="brand-section-header-glass">Trending <span>Brands</span></h2>
               <div className="luxury-divider" style={{ background: 'linear-gradient(90deg, #38bdf8, #e0f2fe, transparent)', margin: '0.5rem 0' }}></div>
             </div>
-            <Link to="/brands" className="glass-view-btn d-none d-md-block">View all <i className="fas fa-arrow-right ms-1"></i></Link>
+            {/* <Link to="/brands" className="glass-view-btn d-none d-md-block">View all <i className="fas fa-arrow-right ms-1"></i></Link> */}
           </div>
 
           <div className="position-relative">
@@ -1219,7 +1224,7 @@ const LandingPage = () => {
       {/* 6. DOCTORS SECTION (FULLY UPGRADED PREMIUM DESIGN) */}
       <section id="doctors" className="py-5 doctors-section-bg ">
         <div className="container">
-        <PremiumDoctorSection />
+          <PremiumDoctorSection />
         </div>
       </section>
 
@@ -1261,7 +1266,7 @@ const LandingPage = () => {
                 <p className="care-card-desc">
                   Scientifically backed programs focusing on dietary shifts, sustained weight management, and intensive coaching to reverse Type 2 diabetes.
                 </p>
-                <Link to="/programs/reversal" className="care-card-link">Explore Program <i className="fas fa-arrow-right"></i></Link>
+                <Link to="/CareProgram" className="care-card-link">Explore Program <i className="fas fa-arrow-right"></i></Link>
               </div>
             </div>
 
@@ -1275,7 +1280,7 @@ const LandingPage = () => {
                 <p className="care-card-desc">
                   Holistic metabolic healing combining expert nutrition planning and medical tracking to help you achieve and maintain your ideal healthy weight.
                 </p>
-                <Link to="/programs/weight-loss" className="care-card-link">Explore Program <i className="fas fa-arrow-right"></i></Link>
+                <Link to="/CareProgram" className="care-card-link">Explore Program <i className="fas fa-arrow-right"></i></Link>
               </div>
             </div>
 
@@ -1289,7 +1294,7 @@ const LandingPage = () => {
                 <p className="care-card-desc">
                   Dedicated 24/7 care ensuring optimal blood sugar levels during pregnancy, safeguarding the health of both the mother and the newborn.
                 </p>
-                <Link to="/programs/gestational" className="care-card-link">Explore Program <i className="fas fa-arrow-right"></i></Link>
+                <Link to="/CareProgram" className="care-card-link">Explore Program <i className="fas fa-arrow-right"></i></Link>
               </div>
             </div>
           </div>

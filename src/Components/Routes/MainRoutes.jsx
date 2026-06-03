@@ -75,6 +75,8 @@ import PatientDashboard from "../Pages/Doctor/PatientDashboard";
 import MedicineComponent from "../landingpageComponents/MedicineComponent";
 import Signup from "../Pages/Signup/OnlySignup";
 import PremiumDoctorSection from "../HomePageDoctor";
+import LabCard from "../LabCard";
+import LabNearMe from "../LabNearMe";
 
 
 const MainRoutes = () => {
@@ -113,6 +115,8 @@ const MainRoutes = () => {
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/term-conditions" element={<TermsConditions />} />
         <Route path="/venders/labs" element={<LabTest />} />
+        <Route path="/lab-card" element={<LabCard />} />
+        <Route path="/labnearme" element={<LabNearMe />} />
         <Route path="/venders/labs/payment" element={<LabPayemnt />} />
         <Route path="/venders/labs/order-success" element={<OrderSuccessLab />} />
         <Route path="/venders/labs/orders" element={<OrderHistoryLab />} />
