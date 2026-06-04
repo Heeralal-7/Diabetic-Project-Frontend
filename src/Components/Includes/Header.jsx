@@ -7,7 +7,7 @@ import $ from "jquery";
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [user, setUser] = useState(null); // API data store karne ke liye
+  const [user, setUser] = useState(null); 
   const URL = process.env.REACT_APP_API_URL;
 
   const logout = () => {
@@ -18,7 +18,6 @@ const Header = () => {
     navigate("/UserLogin");
   };
 
-  // Profile Fetch karne ki API carefully logic ke saath
   const fetchProfileData = async () => {
     try {
       const tokenStr = sessionStorage.getItem("token");
@@ -38,7 +37,7 @@ const Header = () => {
   };
 
   useEffect(() => {
-    fetchProfileData(); // Component load hote hi profile fetch hogi
+    fetchProfileData();
 
     const handleLinkClick = function () {
       const path = $(this).attr("href");
@@ -67,7 +66,8 @@ const Header = () => {
     <>
       <style
         dangerouslySetInnerHTML={{
-          __html: `.fs-small{
+          __html: `
+            .fs-small{
               font-size: 0.85rem;
             }
             .fixed-top {
@@ -75,12 +75,11 @@ const Header = () => {
               top: 0;
               right: 0;
               left: 0;
-              z-index: 1000 !important;
+              z-index: 1050 !important;
             }
             .custom-dropdown-hover:hover {
               background-color: #c1d8f1ff !important; 
             }
-
             .custom-menu-hover {
               transition: all 0.2s ease-in-out;
             }
@@ -93,6 +92,32 @@ const Header = () => {
             }
             .modal-label { font-weight: 700; color: #0d6efd; font-size: 0.8rem; text-transform: uppercase; }
             .modal-value { font-weight: 500; color: #333; margin-bottom: 10px; font-size: 0.95rem; }
+
+            /* RESPONSIVE FIXES */
+            .navbar-container-custom {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              width: 100%;
+              flex-wrap: nowrap; /* Prevents profile icon from jumping to next line */
+            }
+            
+            /* Ensure the profile section never shrinks */
+            .profile-section-nav {
+              flex-shrink: 0;
+              margin-left: 10px;
+            }
+
+            @media (min-width: 992px) and (max-width: 1400px) {
+              .CustomNav .nav-link {
+                padding-left: 8px !important;
+                padding-right: 8px !important;
+                font-size: 0.75rem; /* Slightly smaller text for mid-range screens like Mac */
+              }
+              .search-form-header {
+                max-width: 300px !important; /* Shorter search bar on smaller desktops */
+              }
+            }
             `,
         }}
       />
@@ -117,7 +142,6 @@ const Header = () => {
               </div>
 
               <div className="row px-2">
-                {/* Conditional Rendering: Sirf wahi keys dikhengi jisme data hai */}
                 {user?.number && <div className="col-6"><div className="modal-label">Mobile</div><div className="modal-value">{user.number}</div></div>}
                 {user?.email && <div className="col-6"><div className="modal-label">Email</div><div className="modal-value">{user.email}</div></div>}
                 {user?.gender && <div className="col-6"><div className="modal-label">Gender</div><div className="modal-value">{user.gender}</div></div>}
@@ -138,161 +162,78 @@ const Header = () => {
         </div>
       </div>
 
-      <nav
-        className="navbar fixed-top fw-bold navbar-expand-lg bg-primary-subtle shadow-sm"
-        id="navbar"
-      >
-        <div className="container-fluid">
-          <Link className="navbar-brand" to="/" style={{ maxWidth: "180px" }}>
-            <img style={{ width: "100%" }} src={img1} alt="" />
+      <nav className="navbar fixed-top fw-bold navbar-expand-lg bg-primary-subtle shadow-sm" id="navbar">
+        <div className="container-fluid navbar-container-custom">
+          {/* LOGO */}
+          <Link className="navbar-brand me-2" to="/" style={{ maxWidth: "180px", flexShrink: 0 }}>
+            <img style={{ width: "100%" }} src={img1} alt="Logo" />
           </Link>
 
-          <div
-            className="offcanvas CustomHeaderOffcan offcanvas-end py-lg-2 OffCanWidth"
-            tabIndex={-1}
-            id="offcanvasNavbar"
-            aria-labelledby="topNavBar"
-          >
+          {/* MAIN NAV & SEARCH (Offcanvas on mobile, flex on desktop) */}
+          <div className="offcanvas CustomHeaderOffcan offcanvas-end py-lg-2 OffCanWidth" tabIndex={-1} id="offcanvasNavbar" aria-labelledby="topNavBar">
             <div className="offcanvas-header">
-              <h5
-                className="offcanvas-title"
-                id="topNavBar"
-                style={{ maxWidth: "200px" }}
-              >
+              <h5 className="offcanvas-title" id="topNavBar" style={{ maxWidth: "200px" }}>
                 <img style={{ width: "100%" }} src={img1} alt="" />
               </h5>
-              <button
-                type="button"
-                className="btn-close shadow-none"
-                data-bs-dismiss="offcanvas"
-                aria-label="Close"
-              />
+              <button type="button" className="btn-close shadow-none" data-bs-dismiss="offcanvas" aria-label="Close" />
             </div>
             <div className="offcanvas-body ps-4">
-              <form
-                className="d-flex mx-auto align-items-center btn-group flex-grow-1 d-lg-none d-xl-flex"
-                style={{ maxWidth: "700px" }}
-                role="search"
-              >
-                <input
-                  className="form-control  shadow-none rounded-end-0 border"
-                  type="search"
-                  placeholder="Search"
-                  aria-label="Search"
-                />
-                <button
-                  className="btn border-mainBlue border border-2 btn-hoverBlue shadow-none text-nowrap"
-                  type="submit"
-                >
+              <form className="d-flex mx-auto align-items-center btn-group flex-grow-1 d-lg-none d-xl-flex search-form-header" style={{ maxWidth: "700px" }} role="search">
+                <input className="form-control shadow-none rounded-end-0 border" type="search" placeholder="Search" aria-label="Search" />
+                <button className="btn border-mainBlue border border-2 btn-hoverBlue shadow-none text-nowrap" type="submit">
                   <i className="fa fa-search" aria-hidden="true" />
                 </button>
               </form>
               <ul className="navbar-nav CustomNav text-nowrap align-items-start flex-grow-1 align-items-lg-center justify-content-end fs-small">
-                <li className="nav-item" data-bs-dismiss="offcanvas">
-                  <Link className="nav-link" aria-current="page" to="/">Home</Link>
-                </li>
-                <li className="nav-item" data-bs-dismiss="offcanvas">
-                  <Link className="nav-link" to="/Doctors">Doctor</Link>
-                </li>
-                <li className="nav-item" data-bs-dismiss="offcanvas">
-                  <Link className="nav-link" to="/Clinic">Clinic</Link>
-                </li>
-                <li className="nav-item" data-bs-dismiss="offcanvas">
-                  <Link className="nav-link" to="/venders/labs">Labs</Link>
-                </li>
-                <li className="nav-item" data-bs-dismiss="offcanvas">
-                  <Link className="nav-link" to="/Pharmacy">Pharmacy</Link>
-                </li>
+                <li className="nav-item" data-bs-dismiss="offcanvas"><Link className="nav-link" to="/">Home</Link></li>
+                <li className="nav-item" data-bs-dismiss="offcanvas"><Link className="nav-link" to="/Doctors">Doctor</Link></li>
+                <li className="nav-item" data-bs-dismiss="offcanvas"><Link className="nav-link" to="/Clinic">Clinic</Link></li>
+                <li className="nav-item" data-bs-dismiss="offcanvas"><Link className="nav-link" to="/venders/labs">Labs</Link></li>
+                <li className="nav-item" data-bs-dismiss="offcanvas"><Link className="nav-link" to="/Pharmacy">Pharmacy</Link></li>
                 <li className="nav-item dropdown nav-item-hover mt-0 pt-0">
-                  <button
-                    className="nav-link text-start border-0 bg-transparent"
-                    data-bs-toggle="dropdown"
-                    aria-expanded="false"
-                  >
-                    Shop
-                    <i className="fa fa-chevron-down ms-1 fs-7 CurrentColor" aria-hidden="true" />
+                  <button className="nav-link text-start border-0 bg-transparent" data-bs-toggle="dropdown" aria-expanded="false">
+                    Shop <i className="fa fa-chevron-down ms-1 fs-7 CurrentColor" aria-hidden="true" />
                   </button>
                   <ul className="dropdown-menu border-0 shadow-sm" style={{ top: "31px" }}>
-                    <li className="w-100" data-bs-dismiss="offcanvas">
-                      <Link className="dropdown-item" to="/pharmacy-shop">Pharmacy Shop</Link>
-                    </li>
+                    <li><Link className="dropdown-item rounded-3" to="/pharmacy-shop">Pharmacy Shop</Link></li>
+                    <li><Link className="dropdown-item rounded-3" to="/Pharmacy">Devices</Link></li>
+                    <li><Link className="dropdown-item rounded-3" to="/Pharmacy">Supplements</Link></li>
+                    <li><Link className="dropdown-item rounded-3" to="/shop/FoodAndNurition">Foods and Beverages</Link></li>
+                    <li><Link className="dropdown-item rounded-3" to="/CareProgram">Lifestyle and Care</Link></li>
                   </ul>
                 </li>
-                <li className="nav-item" data-bs-dismiss="offcanvas">
-                  <Link className="nav-link" to="/shop/FoodAndNurition">Food & Nurition</Link>
-                </li>
-                <li className="nav-item" data-bs-dismiss="offcanvas">
-                  <Link className="nav-link" to="/CareProgram">Care Program</Link>
-                </li>
-                <li className="nav-item" data-bs-dismiss="offcanvas">
-                  <Link className="nav-link" to="/Science">Science</Link>
-                </li>
-                <li className="nav-item" data-bs-dismiss="offcanvas">
-                  <Link className="nav-link" to="/AboutUs">About Us</Link>
-                </li>
-                <li className="nav-item" data-bs-dismiss="offcanvas">
-                  <Link className="nav-link" to="/Blogs">Blogs</Link>
-                </li>
-                <li className="nav-item" data-bs-dismiss="offcanvas">
-                  <Link className="nav-link" to="/videos">Videos</Link>
-                </li>
+                <li className="nav-item" data-bs-dismiss="offcanvas"><Link className="nav-link" to="/shop/FoodAndNurition">Food & Nurition</Link></li>
+                <li className="nav-item" data-bs-dismiss="offcanvas"><Link className="nav-link" to="/CareProgram">Care Program</Link></li>
+                <li className="nav-item" data-bs-dismiss="offcanvas"><Link className="nav-link" to="/Science">Science</Link></li>
+                <li className="nav-item" data-bs-dismiss="offcanvas"><Link className="nav-link" to="/AboutUs">About Us</Link></li>
+                <li className="nav-item" data-bs-dismiss="offcanvas"><Link className="nav-link" to="/Blogs">Blogs</Link></li>
+                <li className="nav-item" data-bs-dismiss="offcanvas"><Link className="nav-link" to="/videos">Videos</Link></li>
               </ul>
             </div>
           </div>
-          <div className="d-flex align-items-center">
-            <button
-              className="navbar-toggler border-0 fw-bold shadow-none"
-              type="button"
-              data-bs-toggle="offcanvas"
-              data-bs-target="#offcanvasNavbar"
-              aria-controls="offcanvasNavbar"
-              aria-label="Toggle navigation"
-            >
+
+          {/* TOGGLER & PROFILE ICON SECTION */}
+          <div className="d-flex align-items-center profile-section-nav">
+            <button className="navbar-toggler border-0 fw-bold shadow-none me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
               <i className="fa-solid fa-bars-staggered"></i>
             </button>
             <div className="dropdown custom-dropdown-hover">
-              <button
-                className="btn py-1 shadow-none border-0 border rounded-circle main-bg-dark d-xl-block ms-xl-0 my-xl-0 w-100 my-2 "
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-                data-bs-auto-close="outside"
-              >
-                <img
-                  src={user?.image || "https://cdn-icons-png.flaticon.com/512/64/64572.png"}
-                  className="imgFilter"
-                  width={30}
-                  alt=""
-                />
+              <button className="btn py-1 shadow-none border-0 rounded-circle main-bg-dark" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+                <img src={user?.image || "https://cdn-icons-png.flaticon.com/512/64/64572.png"} className="imgFilter" width={30} height={30} style={{objectFit:'cover', borderRadius:'50%'}} alt="Profile" />
               </button>
-              <div
-                className="dropdown-menu profileDropdwn w-auto rounded-4 DropdwnScale me-5 shadow-lg border-0"
-                style={{ marginTop: "65px", minWidth: "250px" }}
-              >
+              <div className="dropdown-menu profileDropdwn w-auto rounded-4 DropdwnScale me-2 me-md-5 shadow-lg border-0" style={{ marginTop: "65px", minWidth: "250px" }}>
                 <div className="border-bottom px-4 pb-3 pt-2">
                   <div className="d-flex justify-content-between align-items-center">
                     <div className="w-auto link-dark">
-                      <span className="fw-bold fs-5 textBlack text-decoration-none">
-                        Hello, {user?.name || "User"}
-                      </span>
+                      <span className="fw-bold fs-5 textBlack">Hello, {user?.name || "User"}</span>
                       <br />
-                      {/* VIEW PROFILE BUTTON: Triggers the Modal */}
-                      <button
-                        className="fw-medium link-danger fs-6 text-decoration-none border-0 bg-transparent p-0"
-                        data-bs-toggle="modal"
-                        data-bs-target="#viewProfileModal"
-                      >
+                      <button className="fw-medium link-danger fs-6 text-decoration-none border-0 bg-transparent p-0" data-bs-toggle="modal" data-bs-target="#viewProfileModal">
                         View Profile
                       </button>
                     </div>
-                    <img
-                      src={user?.image || "https://cdn-icons-png.flaticon.com/512/64/64572.png"}
-                      className="imgFilter ms-3"
-                      width={30}
-                      alt=""
-                    />
+                    <img src={user?.image || "https://cdn-icons-png.flaticon.com/512/64/64572.png"} className="imgFilter ms-3" width={30} alt="" />
                   </div>
                 </div>
-
                 <div className="py-2 px-2 d-flex flex-column">
                   <Link to="/UserLogin" className="text-decoration-none text-dark">
                     <button className="btn border-0 fw-bold w-100 text-start custom-menu-hover p-2 mb-1">
@@ -300,31 +241,11 @@ const Header = () => {
                       <span className="ms-3 align-middle">Login</span>
                     </button>
                   </Link>
-
-                  {/* NEW Signup Button added right below Login */}
-                  <Link to="/only-signup" className="text-decoration-none text-dark">
-                    <button className="btn border-0 fw-bold w-100 text-start custom-menu-hover p-2 mb-1">
-                      <i className="ri-user-add-line fw-medium fs-4 align-middle text-primary" />
-                      <span className="ms-3 align-middle text-primary">Sign up</span>
-                    </button>
-                  </Link>
-
                   <div className="w-100 my-1">
-                    <button
-                      className="btn border-0 fw-bold w-100 text-start d-flex justify-content-between align-items-center shadow-none custom-menu-hover p-2"
-                      type="button"
-                      data-bs-toggle="collapse"
-                      data-bs-target="#settingsSubmenu"
-                      aria-expanded="false"
-                      aria-controls="settingsSubmenu"
-                    >
-                      <div>
-                        <i className="ri-settings-4-line fw-medium fs-4 align-middle" />
-                        <span className="ms-3 align-middle">Settings</span>
-                      </div>
+                    <button className="btn border-0 fw-bold w-100 text-start d-flex justify-content-between align-items-center shadow-none custom-menu-hover p-2" type="button" data-bs-toggle="collapse" data-bs-target="#settingsSubmenu" aria-expanded="false">
+                      <div><i className="ri-settings-4-line fw-medium fs-4 align-middle" /><span className="ms-3 align-middle">Settings</span></div>
                       <i className="fa fa-chevron-down fs-7 align-middle" />
                     </button>
-
                     <div className="collapse w-100 mt-1" id="settingsSubmenu">
                       <ul className="list-unstyled mb-0 pb-1 ps-4 pe-2">
                         <li><Link className="dropdown-item py-2 my-1 fw-medium custom-menu-hover" to="/Doctors/history"><i className="fa fa-caret-right me-2" style={{ fontSize: "12px" }}></i>Doctor Appointment</Link></li>
@@ -334,11 +255,7 @@ const Header = () => {
                       </ul>
                     </div>
                   </div>
-
-                  <button
-                    className="btn border-0 fw-bold w-100 text-start mt-1 custom-menu-hover p-2"
-                    onClick={logout}
-                  >
+                  <button className="btn border-0 fw-bold w-100 text-start mt-1 custom-menu-hover p-2" onClick={logout}>
                     <i className="ri-logout-circle-line fw-medium fs-4 align-middle text-danger" />
                     <span className="ms-3 align-middle text-danger">Log out</span>
                   </button>
