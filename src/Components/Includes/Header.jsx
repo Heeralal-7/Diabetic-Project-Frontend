@@ -62,6 +62,16 @@ const Header = () => {
     };
   }, [location]);
 
+  // 🔥 ICON PATH LOGIC: Relative path ko full URL mein convert karne ke liye
+  const getProfileIcon = () => {
+    if (user?.image) {
+      // Agar image full URL hai toh wahi dikhao, varna base URL jodo
+      return user.image.startsWith('http') ? user.image : `${URL}${user.image}`;
+    }
+    // Default dummy icon agar image nahi hai
+    return "https://cdn-icons-png.flaticon.com/512/64/64572.png";
+  };
+
   return (
     <>
       <style
@@ -93,29 +103,31 @@ const Header = () => {
             .modal-label { font-weight: 700; color: #0d6efd; font-size: 0.8rem; text-transform: uppercase; }
             .modal-value { font-weight: 500; color: #333; margin-bottom: 10px; font-size: 0.95rem; }
 
-            /* RESPONSIVE FIXES */
-            .navbar-container-custom {
-              display: flex;
-              align-items: center;
-              justify-content: space-between;
-              width: 100%;
-              flex-wrap: nowrap; /* Prevents profile icon from jumping to next line */
+            /* 🛠️ RESPONSIVE MAC/LARGE SCREEN FIX */
+            .navbar .container-fluid {
+              display: flex !important;
+              flex-wrap: nowrap !important; /* Forces profile to stay on right */
+              align-items: center !important;
             }
             
-            /* Ensure the profile section never shrinks */
-            .profile-section-nav {
-              flex-shrink: 0;
-              margin-left: 10px;
+            .navbar-nav.CustomNav {
+              margin-left: auto; /* Nav links ko right align karne ke liye */
             }
 
-            @media (min-width: 992px) and (max-width: 1400px) {
-              .CustomNav .nav-link {
-                padding-left: 8px !important;
-                padding-right: 8px !important;
-                font-size: 0.75rem; /* Slightly smaller text for mid-range screens like Mac */
+            .profile-section-right {
+              display: flex !important;
+              align-items: center !important;
+              flex-shrink: 0 !important; /* Mac par squeez hone se rokta hai */
+            }
+
+            /* SHOP DROPDOWN HOVER */
+            @media (min-width: 992px) {
+              .nav-item-hover:hover > .dropdown-menu {
+                display: block !important;
+                margin-top: 0; 
               }
-              .search-form-header {
-                max-width: 300px !important; /* Shorter search bar on smaller desktops */
+              .search-form-responsive {
+                max-width: 350px !important;
               }
             }
             `,
@@ -133,7 +145,7 @@ const Header = () => {
             <div className="modal-body pt-3">
               <div className="text-center mb-4">
                 <img
-                  src={user?.image || "https://cdn-icons-png.flaticon.com/512/64/64572.png"}
+                  src={getProfileIcon()}
                   className="rounded-circle border border-3 border-primary p-1 mb-2"
                   width={100} height={100} style={{ objectFit: 'cover' }} alt="profile"
                 />
@@ -163,13 +175,13 @@ const Header = () => {
       </div>
 
       <nav className="navbar fixed-top fw-bold navbar-expand-lg bg-primary-subtle shadow-sm" id="navbar">
-        <div className="container-fluid navbar-container-custom">
+        <div className="container-fluid">
           {/* LOGO */}
           <Link className="navbar-brand me-2" to="/" style={{ maxWidth: "180px", flexShrink: 0 }}>
             <img style={{ width: "100%" }} src={img1} alt="Logo" />
           </Link>
 
-          {/* MAIN NAV & SEARCH (Offcanvas on mobile, flex on desktop) */}
+          {/* MAIN NAV & SEARCH */}
           <div className="offcanvas CustomHeaderOffcan offcanvas-end py-lg-2 OffCanWidth" tabIndex={-1} id="offcanvasNavbar" aria-labelledby="topNavBar">
             <div className="offcanvas-header">
               <h5 className="offcanvas-title" id="topNavBar" style={{ maxWidth: "200px" }}>
@@ -178,7 +190,7 @@ const Header = () => {
               <button type="button" className="btn-close shadow-none" data-bs-dismiss="offcanvas" aria-label="Close" />
             </div>
             <div className="offcanvas-body ps-4">
-              <form className="d-flex mx-auto align-items-center btn-group flex-grow-1 d-lg-none d-xl-flex search-form-header" style={{ maxWidth: "700px" }} role="search">
+              <form className="d-flex mx-auto align-items-center btn-group flex-grow-1 d-lg-none d-xl-flex search-form-responsive" style={{ maxWidth: "700px" }} role="search">
                 <input className="form-control shadow-none rounded-end-0 border" type="search" placeholder="Search" aria-label="Search" />
                 <button className="btn border-mainBlue border border-2 btn-hoverBlue shadow-none text-nowrap" type="submit">
                   <i className="fa fa-search" aria-hidden="true" />
@@ -190,18 +202,20 @@ const Header = () => {
                 <li className="nav-item" data-bs-dismiss="offcanvas"><Link className="nav-link" to="/Clinic">Clinic</Link></li>
                 <li className="nav-item" data-bs-dismiss="offcanvas"><Link className="nav-link" to="/venders/labs">Labs</Link></li>
                 <li className="nav-item" data-bs-dismiss="offcanvas"><Link className="nav-link" to="/Pharmacy">Pharmacy</Link></li>
+                
                 <li className="nav-item dropdown nav-item-hover mt-0 pt-0">
                   <button className="nav-link text-start border-0 bg-transparent" data-bs-toggle="dropdown" aria-expanded="false">
                     Shop <i className="fa fa-chevron-down ms-1 fs-7 CurrentColor" aria-hidden="true" />
                   </button>
                   <ul className="dropdown-menu border-0 shadow-sm" style={{ top: "31px" }}>
                     <li><Link className="dropdown-item rounded-3" to="/pharmacy-shop">Pharmacy Shop</Link></li>
-                    <li><Link className="dropdown-item rounded-3" to="/Pharmacy">Devices</Link></li>
+                    <li><Link className="dropdown-item rounded-3" to="/Pharmacy">Devices </Link></li>
                     <li><Link className="dropdown-item rounded-3" to="/Pharmacy">Supplements</Link></li>
                     <li><Link className="dropdown-item rounded-3" to="/shop/FoodAndNurition">Foods and Beverages</Link></li>
                     <li><Link className="dropdown-item rounded-3" to="/CareProgram">Lifestyle and Care</Link></li>
                   </ul>
                 </li>
+
                 <li className="nav-item" data-bs-dismiss="offcanvas"><Link className="nav-link" to="/shop/FoodAndNurition">Food & Nurition</Link></li>
                 <li className="nav-item" data-bs-dismiss="offcanvas"><Link className="nav-link" to="/CareProgram">Care Program</Link></li>
                 <li className="nav-item" data-bs-dismiss="offcanvas"><Link className="nav-link" to="/Science">Science</Link></li>
@@ -212,14 +226,21 @@ const Header = () => {
             </div>
           </div>
 
-          {/* TOGGLER & PROFILE ICON SECTION */}
-          <div className="d-flex align-items-center profile-section-nav">
+          {/* 🛠️ PROFILE SECTION: Exact Original Design classes restored */}
+          <div className="d-flex align-items-center profile-section-right">
             <button className="navbar-toggler border-0 fw-bold shadow-none me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
               <i className="fa-solid fa-bars-staggered"></i>
             </button>
             <div className="dropdown custom-dropdown-hover">
-              <button className="btn py-1 shadow-none border-0 rounded-circle main-bg-dark" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
-                <img src={user?.image || "https://cdn-icons-png.flaticon.com/512/64/64572.png"} className="imgFilter" width={30} height={30} style={{objectFit:'cover', borderRadius:'50%'}} alt="Profile" />
+              <button className="btn py-1 shadow-none border-0 border rounded-circle main-bg-dark d-xl-block ms-xl-0 my-xl-0 w-100 my-2" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+                <img
+                  src={getProfileIcon()} // 🔥 Fixed dynamic icon logic
+                  className="imgFilter"
+                  width={30}
+                  height={30}
+                  alt="User Icon"
+                  style={{objectFit: 'cover', borderRadius: '50%'}}
+                />
               </button>
               <div className="dropdown-menu profileDropdwn w-auto rounded-4 DropdwnScale me-2 me-md-5 shadow-lg border-0" style={{ marginTop: "65px", minWidth: "250px" }}>
                 <div className="border-bottom px-4 pb-3 pt-2">
@@ -231,7 +252,7 @@ const Header = () => {
                         View Profile
                       </button>
                     </div>
-                    <img src={user?.image || "https://cdn-icons-png.flaticon.com/512/64/64572.png"} className="imgFilter ms-3" width={30} alt="" />
+                    <img src={getProfileIcon()} className="imgFilter ms-3" width={30} height={30} style={{borderRadius:'50%'}} alt="" />
                   </div>
                 </div>
                 <div className="py-2 px-2 d-flex flex-column">
